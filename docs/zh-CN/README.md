@@ -39,7 +39,7 @@ npx get-shit-done-cc@latest
 
 **被 Amazon、Google、Shopify 和 Webflow 的工程师信赖使用。**
 
-[我为什么开发这个](#我为什么开发这个) · [工作原理](#工作原理) · [命令](#命令) · [为什么有效](#为什么有效) · [用户指南](USER-GUIDE.md)
+[我为什么开发这个](#我为什么开发这个) · [工作原理](#工作原理) · [命令](#命令) · [为什么有效](#为什么有效) · [用户指南](USER-GUIDE.md) · [功能参考](FEATURES.md) · [命令参考](COMMANDS.md) · [配置参考](CONFIGURATION.md) · [代理参考](AGENTS.md) · [架构](ARCHITECTURE.md) · [CLI 工具](CLI-TOOLS.md) · [清单](INVENTORY.md) · [Beta 功能](BETA.md) · [上下文监控](context-monitor.md) · [Discuss 模式](workflow-discuss-mode.md) · [手动更新](manual-update.md)
 
 </div>
 

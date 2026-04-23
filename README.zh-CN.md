@@ -41,7 +41,7 @@ npx get-shit-done-cc@latest
 
 **已被 Amazon、Google、Shopify 和 Webflow 的工程师采用。**
 
-[我为什么做这个](#我为什么做这个) · [它是怎么工作的](#它是怎么工作的) · [命令](#命令) · [为什么它有效](#为什么它有效) · [用户指南](docs/USER-GUIDE.md)
+[我为什么做这个](#我为什么做这个) · [它是怎么工作的](#它是怎么工作的) · [命令](#命令) · [为什么它有效](#为什么它有效) · [文档索引](docs/README.md) · [用户指南](docs/USER-GUIDE.md) · [English](README.md)
 
 </div>
 

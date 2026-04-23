@@ -238,6 +238,94 @@
 
 ---
 
+## 使用示例
+
+### 示例 1：新项目启动
+
+```bash
+/gsd-new-project
+/gsd-discuss-phase 1
+/gsd-plan-phase 1
+/gsd-execute-phase 1
+/gsd-verify-work 1
+```
+
+适合从零开始的新项目。先建立需求和路线图，再逐阶段推进。
+
+### 示例 2：已有代码库
+
+```bash
+/gsd-map-codebase
+/gsd-new-project
+/gsd-plan-phase 2
+```
+
+适合已经有现成代码，需要先理解现状再继续开发的场景。
+
+### 示例 3：快速修复
+
+```bash
+/gsd-quick "fix login redirect"
+```
+
+适合小修小补，不想走完整规划流程的任务。
+
+---
+
+## 故障排除
+
+### `/gsd-plan-phase` 失败
+
+- 检查 `ROADMAP.md` 是否存在且内容有效
+- 确认 `REQUIREMENTS.md` 与 `CONTEXT.md` 已生成
+- 如果是验证失败，查看 `PLAN.md` 是否引用了不可访问的文件或 API
+
+### `/gsd-execute-phase` 失败
+
+- 先看 `SUMMARY.md` 中记录的偏差
+- 检查是否有 wave 依赖顺序问题
+- 如果是节点修复失败，改用 `/gsd-verify-work` 逐步定位
+
+### `/gsd-ui-phase` 没有触发
+
+- 确认 `workflow.ui_phase` 没有被关闭
+- 仅在有前端/UI 工作的阶段才会触发
+- 如果项目没有设计系统，检查 shadcn 初始化提示
+
+### 上下文快满了
+
+出现 WARNING 时，优先收尾当前任务，避免开启新的复杂工作。出现 CRITICAL 时立即运行 `/gsd-pause-work`。
+
+---
+
+## 恢复快速参考
+
+### 恢复当前会话
+
+```bash
+/gsd-resume-work
+```
+
+### 暂停并保存状态
+
+```bash
+/gsd-pause-work
+```
+
+### 查看当前进度
+
+```bash
+/gsd-progress
+```
+
+### 查看下一步
+
+```bash
+/gsd-next
+```
+
+---
+
 ## 配置参考
 
 GSD 在 `.planning/config.json` 中存储项目设置。在 `/gsd-new-project` 期间配置或稍后用 `/gsd-settings` 更新。
