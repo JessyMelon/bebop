@@ -1,6 +1,6 @@
 <purpose>
 自治式 audit-to-fix pipeline。运行 audit、解析 findings、将每项归类为
-可自动修复或仅能手动处理，为可修复问题启动 executor agents，在每次修复后运行 tests，
+auto-fixable 或 manual-only，为可修复问题启动 executor agents，在每次修复后运行 tests，
 并以包含 finding ID 的原子提交保证可追踪性。
 </purpose>
 

@@ -93,7 +93,7 @@ ROADMAP=$(gsd-sdk query roadmap.analyze)
 
 **应用 `--to N` 过滤：** 如果提供了 `TO_PHASE`，进一步过滤掉 `number > TO_PHASE` 的 phases（使用数值比较）。这会把执行范围限制在目标 phase 及之前。
 
-**应用 `--only N` 过滤：** 如果提供了 `ONLY_PHASE`，进一步过滤掉 `number != ONLY_PHASE` 的 phases。这样 phase 列表最终只会包含一个 phase（或零个，如果已完成）。
+**应用 `--only N` 过滤：** 如果提供了 `ONLY_PHASE`，进一步过滤 OUT `number != ONLY_PHASE` 的 phases。这样 phase 列表最终只会包含一个 phase（或零个，如果 already complete）。
 
 **如果设置了 `TO_PHASE` 且没有剩余 phases**（直到 N 的 phases 都已完成）：
 
@@ -103,7 +103,7 @@ All phases through ${TO_PHASE} are already completed. Nothing to do.
 
 干净退出。
 
-**如果设置了 `ONLY_PHASE` 且没有剩余 phases**（该 phase 已完成）：
+**如果设置了 `ONLY_PHASE` 且没有剩余 phases**（phase already complete）：
 
 ```
 Phase ${ONLY_PHASE} is already complete. Nothing to do.
@@ -160,7 +160,7 @@ DETAIL=$(gsd-sdk query roadmap.get-phase ${PHASE_NUM})
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-其中 N = 当前 phase 编号（来自 ROADMAP，例如 63），T = 当前 milestone 的 phase 总数（来自 initialize 步骤中解析出的 `phase_count`，例如 67）。**重要：** T 必须是 `phase_count`（当前 milestone 的全部 phase 总数），而不是剩余/未完成 phases 的数量。当 phase 编号为 61-67 时，T=7，横幅应显示 `Phase 63/7`（phase 63，milestone 共 7 个），而不是 `Phase 63/3`（会把剩余 3 个误解为总数）。P = 当前 milestone 中已完成 phases 的百分比。计算方式：最近一次 `roadmap analyze` 里 `disk_status` 为 "complete" 的 phase 数量 / T × 100。进度条使用 █ 表示已完成段，░ 表示未完成段，总宽 8 个字符。
+其中 N = 当前 phase 编号（来自 ROADMAP，例如 63），T = 当前 milestone 的 phase 总数（来自 initialize 步骤中解析出的 `phase_count`，例如 67）。**重要：** T 必须是 `phase_count`（当前 milestone 的全部 phase 总数），而不是剩余/未完成 phases 的数量。当 phase 编号为 61-67 时，T=7，横幅应显示 `Phase 63/7`（phase 63，milestone 共 7 个），而不是 `Phase 63/3`（会把剩余 3 个误解为总数）。P = 当前 milestone 中已完成 phases 的百分比。计算方式：最近一次 `disk_status` 为 "complete" 的 phase 数量来自 `roadmap analyze` / T × 100。进度条使用 █ 表示已完成段，░ 表示未完成段，总宽 8 个字符。
 
 **当 phase 编号大于总数时的备用显示**（例如多 milestone 项目中 phase 编号是全局递增）：如果 N > T，改用 `Phase {N} ({position}/{T})` 格式，其中 `position` 是当前 phase 在待处理未完成 phases 中的 1-based 索引。这样能避免像 "Phase 63/5" 这种容易误解的显示。
 
@@ -188,7 +188,7 @@ Phase ${PHASE_NUM}: Context exists — skipping discuss.
 SKIP_DISCUSS=$(gsd-sdk query config-get workflow.skip_discuss 2>/dev/null || echo "false")
 ```
 
-**如果 `SKIP_DISCUSS` 为 `true`：** 完全跳过 discuss，此时 ROADMAP 中的 phase 描述就是 spec。显示：
+**如果 SKIP_DISCUSS 为 `true`：** 完全跳过 discuss，此时 ROADMAP 中的 phase 描述就是 spec。显示：
 
 ```
 Phase ${PHASE_NUM}: Discuss skipped (workflow.skip_discuss=true) — using ROADMAP phase goal as spec.
@@ -254,7 +254,7 @@ gsd-sdk query commit "docs(${PADDED_PHASE}): auto-generated context (discuss ski
 
 继续到 3b。
 
-**如果 `SKIP_DISCUSS` 为 `false`（或未设置）：**
+**如果 SKIP_DISCUSS 为 `false`（或未设置）：**
 
 **重要：自治模式下 discuss 必须单次完成。**
 `--auto` 模式下的 discuss 步骤**不得循环**。如果 discuss 完成后 CONTEXT.md 已存在，就**不要**为同一 phase 再次调用 discuss。下面的 `has_context` 检查是最终判断标准；一旦为 true，无论上下文文件看起来是否仍有“空白”，都视为该 phase 的 discuss 已完成。
@@ -338,7 +338,7 @@ Skill(skill="gsd-plan-phase", args="${PHASE_NUM}")
 
 **3c. Execute**
 
-**如果设置了 `INTERACTIVE`：** 等待 plan agent 完成（如果还没完成），确认 plans 存在，然后把 execute 作为后台 agent 派发：
+**如果设置了 `INTERACTIVE`：** 等待 plan agent complete（如果还没完成），确认 plans 存在，然后把 execute 作为后台 agent 派发：
 
 ```
 Agent(
@@ -348,7 +348,7 @@ Agent(
 )
 ```
 
-保存 agent 的 task_id。此时 workflow 可以开始讨论下一个 phase，同时当前 phase 在后台执行。在进入该 phase 的 post-execution 路由前，先等待 execute agent 完成。
+保存 agent 的 task_id。此时 workflow 可以开始讨论下一个 phase，同时当前 phase 在后台执行。在进入该 phase 的 post-execution 路由前，先等待 execute agent complete。
 
 **如果未设置 `INTERACTIVE`（默认）：** 和以前一样，内联运行 execute。
 
@@ -379,7 +379,7 @@ Skill(skill="gsd:code-review-fix", args="${PHASE_NUM} --auto")
 
 **3d. Post-Execution Routing**
 
-**如果设置了 `INTERACTIVE`：** 在读取验证结果前，先等待 execute agent 完成。
+**如果设置了 `INTERACTIVE`：** 在读取验证结果前，先等待 execute agent complete。
 
 在 execute-phase 返回后（或 execute agent 完成后），读取验证结果：
 
@@ -395,7 +395,7 @@ PHASE_STATE=$(gsd-sdk query init.phase-op ${PHASE_NUM})
 
 从 JSON 中解析 `phase_dir`。
 
-**如果 `VERIFY_STATUS` 为空**（没有 VERIFICATION.md 或没有 status 字段）：
+**如果 VERIFY_STATUS 为空**（没有 VERIFICATION.md 或没有 status 字段）：
 
 转到 handle_blocker："Execute phase ${PHASE_NUM} did not produce verification results."
 
@@ -413,7 +413,7 @@ Phase ${PHASE_NUM} ✅ ${PHASE_NAME} — Verification passed
 读取 VERIFICATION.md 中的 human_verification 小节，获取需要人工测试的条目和数量。
 
 
-**文本模式（配置中 `workflow.text_mode: true` 或 `--text` flag）：** 如果 `$ARGUMENTS` 中有 `--text`，或 init JSON 中的 `text_mode` 为 `true`，则设置 `TEXT_MODE=true`。启用 TEXT_MODE 时，把每个 `AskUserQuestion` 调用替换为纯文本编号列表，并要求用户输入选项编号。这是非 Claude 运行时（OpenAI Codex、Gemini CLI 等）的必需方式，因为这些环境没有 `AskUserQuestion`。
+**文本模式（配置中 `workflow.text_mode: true` 或 `--text` flag）：** 设置 `TEXT_MODE=true`：如果 `--text` 出现在 `$ARGUMENTS` 中，或 init JSON 中的 `text_mode` 为 `true`。当 TEXT_MODE is active 时，把每个 `AskUserQuestion` 调用替换为纯文本编号列表，并要求用户输入选项编号。这是非 Claude 运行时（OpenAI Codex、Gemini CLI 等）的必需方式，因为这些环境没有 `AskUserQuestion`。
 先展示条目，然后通过 AskUserQuestion 向用户提问：
 - **question:** "Phase ${PHASE_NUM} has items needing manual verification. Validate now or continue to next phase?"
 - **options:** "Validate now" / "Continue without validation"
@@ -540,7 +540,7 @@ Smart discuss 是为 autonomous 优化的 `gsd-discuss-phase` 变体。它会用
  Resume with: /gsd-autonomous --from ${next_incomplete_phase}
 ```
 
-直接进入 lifecycle 步骤（它会处理部分完成状态，不会执行 audit/complete/cleanup，因为并非所有 phases 都完成了）。随后干净退出。
+直接进入 lifecycle 步骤（它会处理 partial completion，不会执行 audit/complete/cleanup，因为并非所有 phases 都完成了）。随后干净退出。
 
 **否则：** 每个 phase 完成后，重新读取 ROADMAP.md，以捕捉执行中途插入的 phases（如 5.1 这种 decimal phases）：
 
@@ -550,8 +550,8 @@ ROADMAP=$(gsd-sdk query roadmap.analyze)
 
 按 discover_phases 中相同的逻辑重新过滤未完成 phases：
 - 保留 `disk_status !== "complete"` 或 `roadmap_complete === false` 的 phases
-- 如果最初提供了 `--from N`，则应用 `--from N` 过滤
-- 如果最初提供了 `--to N`，则应用 `--to N` 过滤
+- 如果最初提供了 `--from N`，则应用该过滤
+- 如果最初提供了 `--to N`，则应用该过滤
 - 按 number 升序排序
 
 重新读取 STATE.md：
@@ -571,7 +571,7 @@ cat .planning/STATE.md
 
 这样用户始终只在回答 discuss 问题（轻量、交互式），而重活（planning、代码生成）在后台运行。主上下文只积累 discuss 对话，因此更轻量。
 
-如果所有 phases 都完成，则进入 lifecycle 步骤。
+如果所有 phases 都 complete，则进入 lifecycle 步骤。
 
 </step>
 
@@ -595,7 +595,7 @@ cat .planning/STATE.md
 
 干净退出。
 
-**否则：** 当所有 phases 都完成后，执行 milestone 生命周期序列：audit → complete → cleanup。
+**否则：** 当所有 phases 都 complete 后，执行 milestone 生命周期序列：audit → complete → cleanup。
 
 显示生命周期切换横幅：
 
@@ -745,8 +745,8 @@ Cleanup 会自行展示 dry-run，并在内部向用户请求确认。这种暂�
 - [ ] 各 phase 之间会显示进度横幅
 - [ ] execute-phase 以 --no-transition 调用（transition 由 autonomous 管理）
 - [ ] 执行后会读取 VERIFICATION.md，并按 status 路由
-- [ ] passed 验证后会自动继续到下一个 phase
-- [ ] human-needed 验证时会提示用户选择验证或跳过
+- [ ] Passed 验证后会自动继续到下一个 phase
+- [ ] Human-needed 验证时会提示用户选择验证或 skip
 - [ ] gaps-found 时会向用户提供 gap closure、继续或停止选项
 - [ ] gap closure 最多自动重试 1 次（避免无限循环）
 - [ ] plan-phase 和 execute-phase 失败时会路由到 handle_blocker
@@ -754,24 +754,24 @@ Cleanup 会自行展示 dry-run，并在内部向用户请求确认。这种暂�
 - [ ] 每个 phase 前都会检查 STATE.md 中的 blockers
 - [ ] blockers 通过用户选择处理（retry / skip / stop）
 - [ ] 最终会显示完成或停止摘要
-- [ ] 所有 phases 完成后，会调用 lifecycle 步骤（而不是只给手动建议）
+- [ ] After all phases complete，会调用 lifecycle 步骤（而不是只给手动建议）
 - [ ] 在 audit 前会显示 lifecycle transition 横幅
 - [ ] 通过 Skill(skill="gsd-audit-milestone") 调用 audit
 - [ ] Audit 结果路由：passed → 自动继续，gaps_found → 用户决定，tech_debt → 用户决定
 - [ ] Audit 技术失败（无文件/无状态）会路由到 handle_blocker
-- [ ] 通过带 `${milestone_version}` 参数的 Skill() 调用 complete-milestone
+- [ ] 通过带 ${milestone_version} 参数的 Skill() 调用 complete-milestone
 - [ ] 通过 Skill() 调用 cleanup，允许其内部确认（CTRL-01）
-- [ ] lifecycle 完成后会显示最终完成横幅
+- [ ] lifecycle 后会显示最终完成横幅
 - [ ] 进度条使用 phase 编号 / milestone 总 phase 数（不是未完成位置），且在 phase 编号超过总数时有备用显示
 - [ ] Smart discuss 会通过 CTRL-03 说明其与 discuss-phase 的关系
 - [ ] Frontend phases 若尚无 UI-SPEC，会在 planning 前生成（step 3a.5）
 - [ ] Frontend phases 若存在 UI-SPEC，会在成功执行后运行 UI review audit（step 3d.5）
-- [ ] UI phase 和 UI review 都遵守 `workflow.ui_phase` 与 `workflow.ui_review` 配置开关
+- [ ] UI phase 和 UI review 都遵守 workflow.ui_phase 与 workflow.ui_review 配置开关
 - [ ] UI review 为建议性（不阻塞），无论分数如何 phase 都会继续到 iterate
 - [ ] `--only N` 将执行严格限制为单个 phase
 - [ ] `--only N` 会跳过 lifecycle 步骤（audit/complete/cleanup）
 - [ ] `--only N` 在单个 phase 完成后干净退出
-- [ ] 对已完成 phase 使用 `--only N` 时，会直接提示并退出
+- [ ] 对 already-complete phase 使用 `--only N` 时，会直接提示并退出
 - [ ] `--only N` 的 handle_blocker resume message 会使用 --only flag
 - [ ] `--to N` 会在 phase N 完成后停止执行（在 iterate 步骤停下）
 - [ ] `--to N` 在发现阶段会过滤掉编号大于 N 的 phases
@@ -779,7 +779,7 @@ Cleanup 会自行展示 dry-run，并在内部向用户请求确认。这种暂�
 - [ ] 对已完成目标使用 `--to N` 时，会以 "already completed" message 退出
 - [ ] `--to N` 可与 `--from N` 兼容（执行从 M 到 N 的 phases）
 - [ ] `--to N` 的 handle_blocker resume message 会保留 --to flag
-- [ ] 当并非所有 milestone phases 都完成时，`--to N` 会跳过 lifecycle
+- [ ] 当并非所有 milestone phases 都 complete 时，`--to N` 会跳过 lifecycle
 - [ ] `--interactive` 会通过 gsd:discuss-phase 内联运行 discuss（提问并等待用户）
 - [ ] `--interactive` 会把 plan 和 execute 派发为后台 agents（上下文隔离）
 - [ ] `--interactive` 支持流水线并行：Phase N 构建时讨论 Phase N+1

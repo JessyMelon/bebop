@@ -76,7 +76,7 @@ AI_SPEC_FILE=$(ls "${PHASE_DIR}"/*-AI-SPEC.md 2>/dev/null | head -1)
 ```
 
 
-**文本模式（配置中 `workflow.text_mode: true` 或 `--text` flag）：** 如果 `$ARGUMENTS` 中有 `--text`，或 init JSON 中的 `text_mode` 为 `true`，则设置 `TEXT_MODE=true`。启用 TEXT_MODE 时，把每个 `AskUserQuestion` 调用替换为纯文本编号列表，并要求用户输入选项编号。这是非 Claude 运行时（OpenAI Codex、Gemini CLI 等）的必需方式，因为这些环境没有 `AskUserQuestion`。
+**文本模式（配置中 `workflow.text_mode: true` 或 `--text` flag）：** 设置 `TEXT_MODE=true`：如果 `--text` 出现在 `$ARGUMENTS` 中，或 init JSON 中的 `text_mode` 为 `true`。当 TEXT_MODE is active 时，把每个 `AskUserQuestion` 调用替换为纯文本编号列表，并要求用户输入选项编号。这是非 Claude 运行时（OpenAI Codex、Gemini CLI 等）的必需方式，因为这些环境没有 `AskUserQuestion`。
 **如果已存在：** 使用 AskUserQuestion：
 - header: "Existing AI-SPEC"
 - question: "AI-SPEC.md already exists for Phase {N}. What would you like to do?"
@@ -279,6 +279,6 @@ Next step:
 - [ ] Eval 策略已建立在领域上下文之上（Sections 5-7 已填充）
 - [ ] Section 7 已将 Arize Phoenix（或检测到的工具）设为 tracing 默认值
 - [ ] AI-SPEC.md 已通过验证（Sections 1b、2、3、4b、5、6 均非空）
-- [ ] 如果启用 `commit_docs`，则已提交
+- [ ] 如果启用 commit_docs，则已提交
 - [ ] 已向用户明确后续步骤
 </success_criteria>

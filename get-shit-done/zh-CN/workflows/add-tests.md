@@ -109,7 +109,7 @@ This command works on completed phases. Run /gsd-execute-phase first.
 继续前，先向用户展示归类结果并确认：
 
 
-**文本模式（配置中 `workflow.text_mode: true` 或 `--text` flag）：** 如果 `$ARGUMENTS` 中有 `--text`，或 init JSON 中的 `text_mode` 为 `true`，则设置 `TEXT_MODE=true`。启用 TEXT_MODE 时，把每个 `AskUserQuestion` 调用替换为纯文本编号列表，并要求用户输入选项编号。这是非 Claude 运行时（OpenAI Codex、Gemini CLI 等）的必需方式，因为这些环境没有 `AskUserQuestion`。
+**文本模式（配置中 `workflow.text_mode: true` 或 `--text` flag）：** 设置 `TEXT_MODE=true`：如果 `--text` 出现在 `$ARGUMENTS` 中，或 init JSON 中的 `text_mode` 为 `true`。当 TEXT_MODE is active 时，把每个 `AskUserQuestion` 调用替换为纯文本编号列表，并要求用户输入选项编号。这是非 Claude 运行时（OpenAI Codex、Gemini CLI 等）的必需方式，因为这些环境没有 `AskUserQuestion`。
 
 ```
 AskUserQuestion(
@@ -181,7 +181,7 @@ AskUserQuestion(
 2. 对每个场景：描述用户操作、预期结果、断言
 3. 注意：RED 关卡表示要确认功能坏掉时测试确实会失败
 
-展示完整 test plan：
+展示 complete test plan：
 
 ```
 AskUserQuestion(
@@ -265,7 +265,7 @@ AskUserQuestion(
      Scenario: {description}
      Error: {error message}
      ```
-   - **Cannot run**：报告 blocker。**不要**标记为完成。
+   - **Cannot run**：报告 blocker。**不要**标记为 complete。
      ```
      🛑 E2E blocker: {reason tests cannot run}
      ```

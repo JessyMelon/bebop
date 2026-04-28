@@ -23,7 +23,7 @@ if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 mkdir -p .planning/todos/pending .planning/todos/completed
 ```
 
-在 infer_area 步骤中，参考 `todos` 数组里的已有 area，保持一致性。
+在 infer_area 步骤中，参考 todos 数组里的已有 area，保持一致性。
 </step>
 
 <step name="extract_content">
@@ -71,7 +71,7 @@ grep -l -i "[key words from title]" .planning/todos/pending/*.md 2>/dev/null || 
 2. 比较范围
 
 
-**文本模式（配置中 `workflow.text_mode: true` 或 `--text` flag）：** 如果 `$ARGUMENTS` 中有 `--text`，或 init JSON 中的 `text_mode` 为 `true`，则设置 `TEXT_MODE=true`。启用 TEXT_MODE 时，把每个 `AskUserQuestion` 调用替换为纯文本编号列表，并要求用户输入选项编号。这是非 Claude 运行时（OpenAI Codex、Gemini CLI 等）的必需方式，因为这些环境没有 `AskUserQuestion`。
+**文本模式（配置中 `workflow.text_mode: true` 或 `--text` flag）：** 设置 `TEXT_MODE=true`：如果 `--text` 出现在 `$ARGUMENTS` 中，或 init JSON 中的 `text_mode` 为 `true`。当 TEXT_MODE is active 时，把每个 `AskUserQuestion` 调用替换为纯文本编号列表，并要求用户输入选项编号。这是非 Claude 运行时（OpenAI Codex、Gemini CLI 等）的必需方式，因为这些环境没有 `AskUserQuestion`。
 如果范围重叠，使用 AskUserQuestion：
 - header: "Duplicate?"
 - question: "Similar todo exists: [title]. What would you like to do?"

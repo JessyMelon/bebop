@@ -1,5 +1,5 @@
 <purpose>
-对所有 UAT 和 verification files 做跨 phase audit。找出全部未完成项（pending、skipped、blocked、human_needed），可选地对照代码库验证它们，以识别过期文档，并生成按优先级排序的人工测试计划。
+对所有 UAT 和 verification files 做跨 phase audit。找出全部未完成项（pending、skipped、blocked、human_needed），可选地对照代码库验证它们，以识别 stale 文档，并生成按优先级排序的人工测试计划。
 </purpose>
 
 <process>
@@ -29,7 +29,7 @@ All tests are passing, resolved, or diagnosed with fix plans.
 **Testable Now**（无外部依赖）：
 - `pending` — tests 从未运行过
 - `human_uat` — 需要人工验证的项
-- `skipped_unresolved` — 被跳过且没有明确阻塞原因
+- `skipped_unresolved` — skipped，且没有明确阻塞原因
 
 **Needs Prerequisites：**
 - `server_blocked` — 需要外部 server 运行
@@ -83,7 +83,7 @@ All tests are passing, resolved, or diagnosed with fix plans.
 </step>
 
 <step name="test_plan">
-仅为 “Testable Now” 且状态为 `active` 的项生成人工 UAT test plan：
+仅为 “Testable Now” 且 active 的项生成人工 UAT test plan：
 
 按可以一起测试的内容分组（同一 screen、同一 feature、同一 prerequisite）：
 

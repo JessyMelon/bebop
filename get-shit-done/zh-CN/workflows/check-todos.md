@@ -103,7 +103,7 @@ Reply with a number to view details, or:
 **如果 todo 映射到某个 roadmap phase：**
 
 
-**文本模式（配置中 `workflow.text_mode: true` 或 `--text` flag）：** 如果 `$ARGUMENTS` 中有 `--text`，或 init JSON 中的 `text_mode` 为 `true`，则设置 `TEXT_MODE=true`。启用 TEXT_MODE 时，把每个 `AskUserQuestion` 调用替换为纯文本编号列表，并要求用户输入选项编号。这是非 Claude 运行时（OpenAI Codex、Gemini CLI 等）的必需方式，因为这些环境没有 `AskUserQuestion`。
+**文本模式（配置中 `workflow.text_mode: true` 或 `--text` flag）：** 设置 `TEXT_MODE=true`：如果 `--text` 出现在 `$ARGUMENTS` 中，或 init JSON 中的 `text_mode` 为 `true`。当 TEXT_MODE is active 时，把每个 `AskUserQuestion` 调用替换为纯文本编号列表，并要求用户输入选项编号。这是非 Claude 运行时（OpenAI Codex、Gemini CLI 等）的必需方式，因为这些环境没有 `AskUserQuestion`。
 使用 AskUserQuestion：
 - header: "Action"
 - question: "This todo relates to Phase [N]: [name]. What would you like to do?"
@@ -143,7 +143,7 @@ mv ".planning/todos/pending/[filename]" ".planning/todos/completed/"
 保持为 pending。开始讨论问题和处理思路。
 
 **Put it back：**
-返回 `list_todos` 步骤。
+返回 list_todos 步骤。
 </step>
 
 <step name="update_state">

@@ -56,7 +56,7 @@ PHASE_INFO=$(gsd-sdk query find-phase 01 --raw)
 - **Critical gaps:**（如有，这些是 blockers）
 - **Non-critical gaps:** tech debt、deferred items、warnings
 - **Anti-patterns found:** TODOs、stubs、placeholders
-- **Requirements coverage:** 哪些 requirements 已满足/被阻塞
+- **Requirements coverage:** 哪些 requirements satisfied/blocked
 
 如果某个 phase 缺少 VERIFICATION.md，标记为 "unverified phase"，这属于 blocker。
 
@@ -138,7 +138,7 @@ done
 
 ## 5.5. Nyquist 合规性探测
 
-如果 `workflow.nyquist_validation` 明确为 `false`，则跳过（缺失视为启用）。
+skip if `workflow.nyquist_validation` 明确为 `false`（缺失视为启用）。
 
 ```bash
 NYQUIST_CONFIG=$(gsd-sdk query config-get workflow.nyquist_validation --raw 2>/dev/null)
@@ -221,17 +221,17 @@ tech_debt:  # Non-critical, deferred
 **Score:** {N}/{M} requirements satisfied
 **Report:** .planning/v{version}-MILESTONE-AUDIT.md
 
-所有 requirements 都已覆盖。跨 phase 集成已验证。E2E flows 完整。
+所有 requirements 都已覆盖。跨 phase 集成已验证。E2E flows complete.
 
 ───────────────────────────────────────────────────────────────
 
 ## ▶ Next Up — [${PROJECT_CODE}] ${PROJECT_TITLE}
 
-**完成 milestone** — 归档并打 tag
+**Complete milestone** — 归档并打 tag
 
-`/clear` 然后：
+/clear then:
 
-`/gsd-complete-milestone {version}`
+/gsd-complete-milestone {version}
 
 ───────────────────────────────────────────────────────────────
 
@@ -272,17 +272,17 @@ tech_debt:  # Non-critical, deferred
 
 ## ▶ Next Up — [${PROJECT_CODE}] ${PROJECT_TITLE}
 
-**规划 gap closure** — 创建 phases 补齐 milestone
+**Plan gap closure** — 创建 phases 来 complete milestone
 
-`/clear` 然后：
+/clear then:
 
-`/gsd-plan-milestone-gaps`
+/gsd-plan-milestone-gaps
 
 ───────────────────────────────────────────────────────────────
 
 **也可继续：**
-- `cat .planning/v{version}-MILESTONE-AUDIT.md` — 查看完整报告
-- `/gsd-complete-milestone {version}` — 仍然继续（接受 tech debt）
+- cat .planning/v{version}-MILESTONE-AUDIT.md — 查看完整报告
+- /gsd-complete-milestone {version} — 仍然继续（接受 tech debt）
 
 ───────────────────────────────────────────────────────────────
 
@@ -310,15 +310,15 @@ tech_debt:  # Non-critical, deferred
 
 ## ▶ Options
 
-**A. 完成 milestone** — 接受 debt，并在 backlog 中跟踪
+**A. Complete milestone** — 接受 debt，并在 backlog 中跟踪
 
-`/gsd-complete-milestone {version}`
+/gsd-complete-milestone {version}
 
-**B. 规划 cleanup phase** — 完成前先处理 debt
+**B. Plan cleanup phase** — 在 completing 前先处理 debt
 
-`/clear` 然后：
+/clear then:
 
-`/gsd-plan-milestone-gaps`
+/gsd-plan-milestone-gaps
 
 ───────────────────────────────────────────────────────────────
 </offer_next>
