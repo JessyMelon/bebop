@@ -10,7 +10,7 @@
 
 ---
 
-## Agents (33 shipped)
+## Agents (34 shipped)
 
 Full roster at `agents/gsd-*.md`. The "Primary doc" column flags whether [`docs/AGENTS.md`](AGENTS.md) carries a full role card (*primary*), a short stub in the "Advanced and Specialized Agents" section (*advanced stub*), or no coverage (*inventory only*).
 
@@ -47,14 +47,15 @@ Full roster at `agents/gsd-*.md`. The "Primary doc" column flags whether [`docs/
 | gsd-eval-auditor | Retroactive audit of an AI phase's evaluation coverage; produces EVAL-REVIEW.md (COVERED/PARTIAL/MISSING). | `/gsd-eval-review` | advanced stub |
 | gsd-framework-selector | ≤6-question interactive decision matrix that scores and recommends an AI/LLM framework. | `/gsd-ai-integration-phase`, `/gsd-select-framework` | advanced stub |
 | gsd-intel-updater | Writes structured intel files (`.planning/intel/*.json`) used as a queryable codebase knowledge base. | `/gsd-intel` | advanced stub |
+| gsd-codewiki-maintainer | Maintains version-aware CodeWiki namespaces and multi-repo CodeWiki sets from source diffs, full coder-llm-wiki bootstrap batches, source-backed enrichment tasks, human-review question discovery, or confirmed review application. | `/gsd-codewiki-update`, `/gsd-codewiki-bootstrap`, `/gsd-codewiki-enrich`, `/gsd-codewiki-review`, `/gsd-codewiki-apply-review` | advanced stub |
 | gsd-doc-classifier | Classifies a single planning document as ADR, PRD, SPEC, DOC, or UNKNOWN; spawned in parallel to process the doc corpus. | `/gsd-ingest-docs` | advanced stub |
 | gsd-doc-synthesizer | Synthesizes classified planning docs into a single consolidated context with precedence rules, cycle detection, and three-bucket conflicts report. | `/gsd-ingest-docs` | advanced stub |
 
-**Coverage note.** `docs/AGENTS.md` gives full role cards for 21 primary agents plus concise stubs for the 12 advanced agents. The Agent Tool Permissions Summary in that file covers only the primary 21 agents; the advanced agents' tool lists are captured in their per-agent frontmatter in `agents/gsd-*.md`.
+**Coverage note.** `docs/AGENTS.md` gives full role cards for 21 primary agents plus concise stubs for the 13 advanced agents. The Agent Tool Permissions Summary in that file covers only the primary 21 agents; the advanced agents' tool lists are captured in their per-agent frontmatter in `agents/gsd-*.md`.
 
 ---
 
-## Commands (83 shipped)
+## Commands (99 shipped)
 
 Full roster at `commands/gsd/*.md`. The groupings below mirror `docs/COMMANDS.md` section order; each row carries the command name, a one-line role derived from the command's frontmatter `description:`, and a link to the source file. `tests/command-count-sync.test.cjs` locks the count against the filesystem.
 
@@ -140,6 +141,22 @@ Full roster at `commands/gsd/*.md`. The groupings below mirror `docs/COMMANDS.md
 | `/gsd-intel` | Query, inspect, or refresh codebase intelligence files in `.planning/intel/`. | [commands/gsd/intel.md](../commands/gsd/intel.md) |
 | `/gsd-graphify` | Build, query, and inspect the project knowledge graph in `.planning/graphs/`. | [commands/gsd/graphify.md](../commands/gsd/graphify.md) |
 | `/gsd-extract-learnings` | Extract decisions, lessons, patterns, and surprises from completed phase artifacts. | [commands/gsd/extract_learnings.md](../commands/gsd/extract_learnings.md) |
+| `/gsd-codewiki-init` | Initialize a version-aware CodeWiki namespace or multi-repo CodeWiki set. | [commands/gsd/codewiki-init.md](../commands/gsd/codewiki-init.md) |
+| `/gsd-codewiki-select` | Select the matching CodeWiki namespace or multi-repo set for the current checkout. | [commands/gsd/codewiki-select.md](../commands/gsd/codewiki-select.md) |
+| `/gsd-codewiki-status` | Show CodeWiki freshness, blockers, snapshots, and set status. | [commands/gsd/codewiki-status.md](../commands/gsd/codewiki-status.md) |
+| `/gsd-codewiki-verify` | Verify CodeWiki maintenance tasks, evidence, and blocked queues. | [commands/gsd/codewiki-verify.md](../commands/gsd/codewiki-verify.md) |
+| `/gsd-codewiki-project` | Project selected CodeWiki context into `.planning/codebase` for planning. | [commands/gsd/codewiki-project.md](../commands/gsd/codewiki-project.md) |
+| `/gsd-codewiki-bootstrap` | Run the full coder-llm-wiki bootstrap workflow for a selected repo namespace. | [commands/gsd/codewiki-bootstrap.md](../commands/gsd/codewiki-bootstrap.md) |
+| `/gsd-codewiki-enrich` | Enrich a repo CodeWiki baseline from `.planning/codebase` maps and source evidence. | [commands/gsd/codewiki-enrich.md](../commands/gsd/codewiki-enrich.md) |
+| `/gsd-codewiki-review` | Produce human review questions for a repo CodeWiki. | [commands/gsd/codewiki-review.md](../commands/gsd/codewiki-review.md) |
+| `/gsd-codewiki-apply-review` | Apply confirmed human review answers into durable CodeWiki pages. | [commands/gsd/codewiki-apply-review.md](../commands/gsd/codewiki-apply-review.md) |
+| `/gsd-codewiki-index` | Index selected CodeWiki facts into `.planning/intel/codewiki.json`. | [commands/gsd/codewiki-index.md](../commands/gsd/codewiki-index.md) |
+| `/gsd-codewiki-pack` | Generate Repomix seed bundles for selected CodeWiki repos. | [commands/gsd/codewiki-pack.md](../commands/gsd/codewiki-pack.md) |
+| `/gsd-codewiki-deepwiki-export` | Run or register DeepWiki exports for selected CodeWiki repos. | [commands/gsd/codewiki-deepwiki-export.md](../commands/gsd/codewiki-deepwiki-export.md) |
+| `/gsd-codewiki-contract` | Create or register a set-level CodeWiki cross-repo contract. | [commands/gsd/codewiki-contract.md](../commands/gsd/codewiki-contract.md) |
+| `/gsd-codewiki-flow` | Create or register a set-level CodeWiki cross-repo flow. | [commands/gsd/codewiki-flow.md](../commands/gsd/codewiki-flow.md) |
+| `/gsd-codewiki-update` | Update CodeWiki from source diffs after verified code changes. | [commands/gsd/codewiki-update.md](../commands/gsd/codewiki-update.md) |
+| `/gsd-codewiki-freeze` | Freeze a CodeWiki namespace or multi-repo set for a shipped version. | [commands/gsd/codewiki-freeze.md](../commands/gsd/codewiki-freeze.md) |
 
 ### Review, Debug & Recovery
 
@@ -173,7 +190,7 @@ Full roster at `commands/gsd/*.md`. The groupings below mirror `docs/COMMANDS.md
 
 ---
 
-## Workflows (81 shipped)
+## Workflows (97 shipped)
 
 Full roster at `get-shit-done/workflows/*.md`. Workflows are thin orchestrators that commands reference internally; most are not read directly by end users. Rows below map each workflow file to its role (derived from the `<purpose>` block) and, where applicable, to the command that invokes it.
 
@@ -192,6 +209,22 @@ Full roster at `get-shit-done/workflows/*.md`. Workflows are thin orchestrators 
 | `cleanup.md` | Archive accumulated phase directories from completed milestones. | `/gsd-cleanup` |
 | `code-review-fix.md` | Auto-fix issues from REVIEW.md via gsd-code-fixer with per-fix atomic commits. | `/gsd-code-review-fix` |
 | `code-review.md` | Review phase source changes via gsd-code-reviewer; produces REVIEW.md. | `/gsd-code-review` |
+| `codewiki-bootstrap.md` | Run the full coder-llm-wiki bootstrap workflow for a selected repo namespace. | `/gsd-codewiki-bootstrap` |
+| `codewiki-contract.md` | Create or register set-level cross-repo contract docs. | `/gsd-codewiki-contract` |
+| `codewiki-deepwiki-export.md` | Run or register DeepWiki exports as seed-only CodeWiki context. | `/gsd-codewiki-deepwiki-export` |
+| `codewiki-enrich.md` | Enrich starter repo CodeWiki pages from codebase maps and source evidence. | `/gsd-codewiki-enrich` |
+| `codewiki-apply-review.md` | Apply confirmed human review answers into durable CodeWiki pages. | `/gsd-codewiki-apply-review` |
+| `codewiki-freeze.md` | Freeze a CodeWiki namespace or multi-repo set for a shipped version. | `/gsd-codewiki-freeze` |
+| `codewiki-flow.md` | Create or register set-level cross-repo flow docs. | `/gsd-codewiki-flow` |
+| `codewiki-index.md` | Index selected CodeWiki facts into `.planning/intel/codewiki.json`. | `/gsd-codewiki-index` |
+| `codewiki-init.md` | Initialize repo-level CodeWiki namespaces and optional multi-repo set manifests. | `/gsd-codewiki-init` |
+| `codewiki-pack.md` | Generate Repomix seed bundles for selected CodeWiki repos. | `/gsd-codewiki-pack` |
+| `codewiki-project.md` | Project selected CodeWiki context into `.planning/codebase/`. | `/gsd-codewiki-project` |
+| `codewiki-review.md` | Produce human-confirmation questions for repo CodeWiki gaps. | `/gsd-codewiki-review` |
+| `codewiki-select.md` | Select the matching CodeWiki namespace or set and report freshness state. | `/gsd-codewiki-select` |
+| `codewiki-status.md` | Show CodeWiki freshness, blockers, snapshots, and set health. | `/gsd-codewiki-status` |
+| `codewiki-update.md` | Update repo and set CodeWiki artifacts from source diffs. | `/gsd-codewiki-update` |
+| `codewiki-verify.md` | Verify CodeWiki task completion, evidence, and blocked queues. | `/gsd-codewiki-verify` |
 | `complete-milestone.md` | Mark a shipped version as complete — MILESTONES.md entry, PROJECT.md evolution, tag. | `/gsd-complete-milestone` |
 | `diagnose-issues.md` | Orchestrate parallel debug agents to investigate UAT gaps and find root causes. | `/gsd-verify-work` (auto-diagnosis) |
 | `discovery-phase.md` | Execute discovery at the appropriate depth level. | `/gsd-new-project` (discovery path) |

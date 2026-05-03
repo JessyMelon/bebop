@@ -1,13 +1,14 @@
 ---
 name: gsd:map-codebase
 description: Analyze codebase with parallel mapper agents to produce .planning/codebase/ documents
-argument-hint: "[optional: specific area to map, e.g., 'api' or 'auth']"
+argument-hint: "[area] [--repos repo-a,repo-b] [--refresh-scope]"
 allowed-tools:
   - Read
   - Bash
   - Glob
   - Grep
   - Write
+  - Edit
   - Task
 ---
 
@@ -24,7 +25,13 @@ Output: .planning/codebase/ folder with 7 structured documents about the codebas
 </execution_context>
 
 <context>
-Focus area: $ARGUMENTS (optional - if provided, tells agents to focus on specific subsystem)
+Arguments: $ARGUMENTS
+
+Supported forms:
+- no arguments: full codebase analysis
+- `<area>`: focus on a subsystem or concern area, for example `auth`
+- `--repos <repo-a,repo-b>`: update `.planning/codebase/` only for the listed repos, preserving existing analysis
+- `<repo-a> <repo-b>`: treated as repo scope when every token matches a configured or local repo
 
 **Load project state if exists:**
 Check for .planning/STATE.md - loads context if project already initialized
@@ -49,17 +56,18 @@ Check for .planning/STATE.md - loads context if project already initialized
 </when_to_use>
 
 <process>
-1. Check if .planning/codebase/ already exists (offer to refresh or skip)
-2. Create .planning/codebase/ directory structure
-3. Spawn 4 parallel gsd-codebase-mapper agents:
+1. Parse arguments and map scope
+2. Check if .planning/codebase/ already exists (offer to refresh or skip unless `--repos` is used)
+3. Create .planning/codebase/ directory structure
+4. Spawn 4 parallel gsd-codebase-mapper agents:
    - Agent 1: tech focus → writes STACK.md, INTEGRATIONS.md
    - Agent 2: arch focus → writes ARCHITECTURE.md, STRUCTURE.md
    - Agent 3: quality focus → writes CONVENTIONS.md, TESTING.md
    - Agent 4: concerns focus → writes CONCERNS.md
-4. Wait for agents to complete, collect confirmations (NOT document contents)
-5. Verify all 7 documents exist with line counts
-6. Commit codebase map
-7. Offer next steps (typically: /gsd-new-project or /gsd-plan-phase)
+5. Wait for agents to complete, collect confirmations (NOT document contents)
+6. Verify all 7 documents exist with line counts
+7. Commit codebase map
+8. Offer next steps (typically: /gsd-new-project or /gsd-plan-phase)
 </process>
 
 <success_criteria>

@@ -1115,6 +1115,55 @@ describe('cmdInitMapCodebase', () => {
     assert.strictEqual(output.codebase_dir_exists, true);
   });
 
+  test('repo-scoped map-codebase parses --repos and preserves existing maps', () => {
+    fs.mkdirSync(path.join(tmpDir, 'ggw-slb_v2012_apsara'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, 'service-slb-lvs'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, 'slb-monitor'), { recursive: true });
+    fs.writeFileSync(path.join(tmpDir, '.planning', 'config.json'), JSON.stringify({
+      sub_repos: ['ggw-slb_v2012_apsara', 'service-slb-lvs', 'slb-monitor'],
+    }, null, 2));
+
+    const result = runGsdTools('init map-codebase --repos ggw-slb_v2012_apsara,service-slb-lvs,slb-monitor', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.map_scope, 'repos');
+    assert.strictEqual(output.repo_scope_from, '--repos');
+    assert.strictEqual(output.preserve_existing, true);
+    assert.strictEqual(output.scoped_update, true);
+    assert.deepStrictEqual(output.target_repos, ['ggw-slb_v2012_apsara', 'service-slb-lvs', 'slb-monitor']);
+    assert.deepStrictEqual(output.target_repo_paths, ['ggw-slb_v2012_apsara', 'service-slb-lvs', 'slb-monitor']);
+    assert.deepStrictEqual(output.missing_target_repos, []);
+  });
+
+  test('repo-scoped map-codebase treats multiple repo-like bare args as repos', () => {
+    fs.mkdirSync(path.join(tmpDir, 'service-slb-lvs'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, 'slb-monitor'), { recursive: true });
+    fs.writeFileSync(path.join(tmpDir, '.planning', 'config.json'), JSON.stringify({
+      sub_repos: ['service-slb-lvs', 'slb-monitor'],
+    }, null, 2));
+
+    const result = runGsdTools('init map-codebase service-slb-lvs slb-monitor', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.map_scope, 'repos');
+    assert.strictEqual(output.repo_scope_from, 'bare-args');
+    assert.deepStrictEqual(output.target_repos, ['service-slb-lvs', 'slb-monitor']);
+  });
+
+  test('single map-codebase arg remains area scope for backwards compatibility', () => {
+    fs.mkdirSync(path.join(tmpDir, 'auth'), { recursive: true });
+
+    const result = runGsdTools('init map-codebase auth', tmpDir);
+    assert.ok(result.success, `Command failed: ${result.error}`);
+
+    const output = JSON.parse(result.output);
+    assert.strictEqual(output.map_scope, 'area');
+    assert.strictEqual(output.area_filter, 'auth');
+    assert.deepStrictEqual(output.target_repos, []);
+  });
+
   test('map-codebase workflow does not list OpenCode under runtimes without Task tool (#1316)', () => {
     const workflow = fs.readFileSync(
       path.join(__dirname, '..', 'get-shit-done', 'workflows', 'map-codebase.md'), 'utf8'

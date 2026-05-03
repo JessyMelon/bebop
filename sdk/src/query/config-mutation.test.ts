@@ -32,6 +32,9 @@ describe('isValidConfigKey', () => {
     expect(isValidConfigKey('model_profile').valid).toBe(true);
     expect(isValidConfigKey('commit_docs').valid).toBe(true);
     expect(isValidConfigKey('workflow.auto_advance').valid).toBe(true);
+    expect(isValidConfigKey('codewiki.repomix_bin').valid).toBe(true);
+    expect(isValidConfigKey('codewiki.deepwiki_export.command').valid).toBe(true);
+    expect(isValidConfigKey('codewiki.deepwiki_export_command').valid).toBe(true);
   });
 
   it('accepts wildcard agent_skills.* patterns', async () => {

@@ -63,6 +63,131 @@ function withProjectRoot(cwd, result) {
   return result;
 }
 
+function asStringArray(value) {
+  return Array.isArray(value) ? value.filter(item => typeof item === 'string') : [];
+}
+
+function normalizeRepoToken(value) {
+  return String(value || '').replace(/\\/g, '/').replace(/\/+$/g, '').trim();
+}
+
+function splitRepoTokens(value) {
+  return String(value || '').split(',').map(normalizeRepoToken).filter(Boolean);
+}
+
+function configuredRepoPaths(config) {
+  return [
+    ...asStringArray(config.sub_repos),
+    ...asStringArray(config.planning && config.planning.sub_repos),
+    ...asStringArray(config.codewiki && config.codewiki.member_repos),
+  ].map(normalizeRepoToken).filter(Boolean);
+}
+
+function repoCandidateMap(config) {
+  const candidates = new Map();
+  for (const repoPath of configuredRepoPaths(config)) {
+    candidates.set(repoPath, repoPath);
+    candidates.set(path.basename(repoPath), repoPath);
+  }
+  return candidates;
+}
+
+function isRepoCandidate(cwd, token, candidates) {
+  const normalized = normalizeRepoToken(token);
+  if (!normalized) return false;
+  if (candidates.has(normalized) || candidates.has(path.basename(normalized))) return true;
+  return fs.existsSync(path.join(cwd, normalized));
+}
+
+function resolveRepoPath(cwd, token, candidates) {
+  const normalized = normalizeRepoToken(token);
+  const configured = candidates.get(normalized) || candidates.get(path.basename(normalized)) || normalized;
+  return fs.existsSync(path.join(cwd, configured)) ? configured : null;
+}
+
+function parseMapCodebaseScope(args, cwd, config) {
+  const tokens = Array.isArray(args) ? args : [];
+  const candidates = repoCandidateMap(config);
+  const repoTokens = [];
+  const areaTokens = [];
+  let explicitRepos = false;
+  let refreshScope = false;
+
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    if (!token) continue;
+    if (token === '--refresh-scope') {
+      refreshScope = true;
+      continue;
+    }
+    if (token === '--repos' || token === '--repo') {
+      explicitRepos = true;
+      const next = tokens[index + 1];
+      if (next && !next.startsWith('--')) {
+        repoTokens.push(...splitRepoTokens(next));
+        index += 1;
+      }
+      continue;
+    }
+    if (token.startsWith('--repos=')) {
+      explicitRepos = true;
+      repoTokens.push(...splitRepoTokens(token.slice('--repos='.length)));
+      continue;
+    }
+    if (token.startsWith('--repo=')) {
+      explicitRepos = true;
+      repoTokens.push(...splitRepoTokens(token.slice('--repo='.length)));
+      continue;
+    }
+    if (token === '--area') {
+      const next = tokens[index + 1];
+      if (next && !next.startsWith('--')) {
+        areaTokens.push(next);
+        index += 1;
+      }
+      continue;
+    }
+    if (!token.startsWith('--')) areaTokens.push(token);
+  }
+
+  const bareTokensLookLikeRepos =
+    !explicitRepos &&
+    areaTokens.length > 1 &&
+    areaTokens.every(token => isRepoCandidate(cwd, token, candidates));
+
+  const targetRepos = explicitRepos ? repoTokens : (bareTokensLookLikeRepos ? areaTokens : repoTokens);
+  const uniqueTargetRepos = Array.from(new Set(targetRepos.map(normalizeRepoToken).filter(Boolean)));
+  const resolvedRepoPaths = uniqueTargetRepos.map(token => resolveRepoPath(cwd, token, candidates)).filter(Boolean);
+  const missingRepos = uniqueTargetRepos.filter(token => !resolveRepoPath(cwd, token, candidates));
+
+  if (uniqueTargetRepos.length > 0) {
+    return {
+      map_scope: 'repos',
+      area_filter: null,
+      target_repos: uniqueTargetRepos,
+      target_repo_paths: resolvedRepoPaths,
+      missing_target_repos: missingRepos,
+      preserve_existing: true,
+      scoped_update: true,
+      refresh_scope: refreshScope,
+      repo_scope_from: explicitRepos ? '--repos' : 'bare-args',
+    };
+  }
+
+  const areaFilter = areaTokens.length > 0 ? areaTokens.join(' ') : null;
+  return {
+    map_scope: areaFilter ? 'area' : 'full',
+    area_filter: areaFilter,
+    target_repos: [],
+    target_repo_paths: [],
+    missing_target_repos: [],
+    preserve_existing: false,
+    scoped_update: false,
+    refresh_scope: false,
+    repo_scope_from: null,
+  };
+}
+
 function cmdInitExecutePhase(cwd, phase, raw, options = {}) {
   if (!phase) {
     error('phase required for init execute-phase');
@@ -880,7 +1005,7 @@ function cmdInitMilestoneOp(cwd, raw) {
   output(withProjectRoot(cwd, result), raw);
 }
 
-function cmdInitMapCodebase(cwd, raw) {
+function cmdInitMapCodebase(cwd, raw, args = []) {
   const config = loadConfig(cwd);
   const now = new Date();
 
@@ -915,6 +1040,7 @@ function cmdInitMapCodebase(cwd, raw) {
     // File existence
     planning_exists: pathExistsInternal(cwd, '.planning'),
     codebase_dir_exists: pathExistsInternal(cwd, '.planning/codebase'),
+    ...parseMapCodebaseScope(args, cwd, config),
   };
 
   output(withProjectRoot(cwd, result), raw);

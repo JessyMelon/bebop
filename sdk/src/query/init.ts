@@ -59,6 +59,141 @@ function pathExists(base: string, relPath: string): boolean {
   return existsSync(join(base, relPath));
 }
 
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
+function normalizeRepoToken(value: string): string {
+  return value.replace(/\\/g, '/').replace(/\/+$/g, '').trim();
+}
+
+function splitRepoTokens(value: string): string[] {
+  return value
+    .split(',')
+    .map(normalizeRepoToken)
+    .filter(Boolean);
+}
+
+function configuredRepoPaths(config: Record<string, unknown>): string[] {
+  const planning = config.planning && typeof config.planning === 'object'
+    ? config.planning as Record<string, unknown>
+    : {};
+  const codewiki = config.codewiki && typeof config.codewiki === 'object'
+    ? config.codewiki as Record<string, unknown>
+    : {};
+  return [
+    ...asStringArray(config.sub_repos),
+    ...asStringArray(planning.sub_repos),
+    ...asStringArray(codewiki.member_repos),
+  ].map(normalizeRepoToken).filter(Boolean);
+}
+
+function repoCandidateMap(config: Record<string, unknown>): Map<string, string> {
+  const candidates = new Map<string, string>();
+  for (const repoPath of configuredRepoPaths(config)) {
+    candidates.set(repoPath, repoPath);
+    candidates.set(basename(repoPath), repoPath);
+  }
+  return candidates;
+}
+
+function isRepoCandidate(projectDir: string, token: string, candidates: Map<string, string>): boolean {
+  const normalized = normalizeRepoToken(token);
+  if (!normalized) return false;
+  if (candidates.has(normalized) || candidates.has(basename(normalized))) return true;
+  return existsSync(join(projectDir, normalized));
+}
+
+function resolveRepoPath(projectDir: string, token: string, candidates: Map<string, string>): string | null {
+  const normalized = normalizeRepoToken(token);
+  const configured = candidates.get(normalized) ?? candidates.get(basename(normalized)) ?? normalized;
+  return existsSync(join(projectDir, configured)) ? configured : null;
+}
+
+function parseMapCodebaseScope(args: string[], projectDir: string, config: Record<string, unknown>): Record<string, unknown> {
+  const candidates = repoCandidateMap(config);
+  const repoTokens: string[] = [];
+  const areaTokens: string[] = [];
+  let explicitRepos = false;
+  let refreshScope = false;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const token = args[index];
+    if (!token) continue;
+    if (token === '--refresh-scope') {
+      refreshScope = true;
+      continue;
+    }
+    if (token === '--repos' || token === '--repo') {
+      explicitRepos = true;
+      const next = args[index + 1];
+      if (next && !next.startsWith('--')) {
+        repoTokens.push(...splitRepoTokens(next));
+        index += 1;
+      }
+      continue;
+    }
+    if (token.startsWith('--repos=')) {
+      explicitRepos = true;
+      repoTokens.push(...splitRepoTokens(token.slice('--repos='.length)));
+      continue;
+    }
+    if (token.startsWith('--repo=')) {
+      explicitRepos = true;
+      repoTokens.push(...splitRepoTokens(token.slice('--repo='.length)));
+      continue;
+    }
+    if (token === '--area') {
+      const next = args[index + 1];
+      if (next && !next.startsWith('--')) {
+        areaTokens.push(next);
+        index += 1;
+      }
+      continue;
+    }
+    if (!token.startsWith('--')) areaTokens.push(token);
+  }
+
+  const bareTokensLookLikeRepos =
+    !explicitRepos &&
+    areaTokens.length > 1 &&
+    areaTokens.every(token => isRepoCandidate(projectDir, token, candidates));
+
+  const targetRepos = explicitRepos ? repoTokens : (bareTokensLookLikeRepos ? areaTokens : repoTokens);
+  const uniqueTargetRepos = Array.from(new Set(targetRepos.map(normalizeRepoToken).filter(Boolean)));
+  const resolvedRepoPaths = uniqueTargetRepos
+    .map(token => resolveRepoPath(projectDir, token, candidates))
+    .filter((item): item is string => Boolean(item));
+  const missingRepos = uniqueTargetRepos.filter(token => !resolveRepoPath(projectDir, token, candidates));
+
+  if (uniqueTargetRepos.length > 0) {
+    return {
+      map_scope: 'repos',
+      area_filter: null,
+      target_repos: uniqueTargetRepos,
+      target_repo_paths: resolvedRepoPaths,
+      missing_target_repos: missingRepos,
+      preserve_existing: true,
+      scoped_update: true,
+      refresh_scope: refreshScope,
+      repo_scope_from: explicitRepos ? '--repos' : 'bare-args',
+    };
+  }
+
+  const areaFilter = areaTokens.length > 0 ? areaTokens.join(' ') : null;
+  return {
+    map_scope: areaFilter ? 'area' : 'full',
+    area_filter: areaFilter,
+    target_repos: [],
+    target_repo_paths: [],
+    missing_target_repos: [],
+    preserve_existing: false,
+    scoped_update: false,
+    refresh_scope: false,
+    repo_scope_from: null,
+  };
+}
+
 /**
  * Get the latest completed milestone from MILESTONES.md.
  * Port of getLatestCompletedMilestone from init.cjs lines 10-25.
@@ -826,7 +961,7 @@ export const initMilestoneOp: QueryHandler = async (_args, projectDir) => {
  * Init handler for map-codebase workflow.
  * Port of cmdInitMapCodebase from init.cjs lines 819-852.
  */
-export const initMapCodebase: QueryHandler = async (_args, projectDir) => {
+export const initMapCodebase: QueryHandler = async (args, projectDir) => {
   const config = await loadConfig(projectDir);
   const now = new Date();
   const codebaseDir = join(projectDir, '.planning', 'codebase');
@@ -850,6 +985,7 @@ export const initMapCodebase: QueryHandler = async (_args, projectDir) => {
     has_maps: existingMaps.length > 0,
     planning_exists: pathExists(projectDir, '.planning'),
     codebase_dir_exists: pathExists(projectDir, '.planning/codebase'),
+    ...parseMapCodebaseScope(args, projectDir, config as Record<string, unknown>),
   };
 
   return { data: withProjectRoot(projectDir, result, config as Record<string, unknown>) };

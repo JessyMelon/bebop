@@ -879,7 +879,7 @@ async function runCommand(command, args, cwd, raw, defaultValue) {
           init.cmdInitMilestoneOp(cwd, raw);
           break;
         case 'map-codebase':
-          init.cmdInitMapCodebase(cwd, raw);
+          init.cmdInitMapCodebase(cwd, raw, args.slice(2));
           break;
         case 'progress':
           init.cmdInitProgress(cwd, raw);

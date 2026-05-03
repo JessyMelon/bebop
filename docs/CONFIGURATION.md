@@ -21,6 +21,23 @@ GSD stores project settings in `.planning/config.json`. Created during `/gsd-new
     "search_gitignored": false,
     "sub_repos": []
   },
+  "codewiki": {
+    "enabled": false,
+    "root": "code-wiki",
+    "active_set": null,
+    "member_repos": [],
+    "update_on_phase_verified": false,
+    "update_on_milestone_complete": true,
+    "require_fresh_before_plan": false,
+    "require_fresh_before_milestone_close": true,
+    "require_verified_before_milestone_close": true,
+    "evidence_policy": "source_required",
+    "projection": {
+      "update_planning_codebase": false,
+      "index_intel": false,
+      "mode": "summary"
+    }
+  },
   "context": null,
   "workflow": {
     "research": true,
@@ -184,6 +201,33 @@ All workflow toggles follow the **absent = enabled** pattern. If a key is missin
 ### Auto-Detection
 
 If `.planning/` is in `.gitignore`, `commit_docs` is automatically `false` regardless of config.json. This prevents git errors.
+
+---
+
+## CodeWiki Settings
+
+Configure version-aware CodeWiki namespaces and multi-repo CodeWiki sets.
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `codewiki.enabled` | boolean | `false` | Enable CodeWiki lifecycle commands for the project |
+| `codewiki.root` | string | `code-wiki` | CodeWiki registry location relative to the workspace root |
+| `codewiki.active_set` | string or null | `null` | Default multi-repo CodeWiki set ID for select/status/update/freeze |
+| `codewiki.member_repos` | array | `[]` | Explicit member repo paths when existing workspace metadata (`sub_repos`, `planning.sub_repos`, `WORKSPACE.md`) cannot discover members |
+| `codewiki.update_on_phase_verified` | boolean | `false` | Run CodeWiki status/update handoff after successful phase verification |
+| `codewiki.update_on_milestone_complete` | boolean | `true` | Freeze CodeWiki during milestone close when CodeWiki is enabled |
+| `codewiki.require_fresh_before_plan` | boolean | `false` | Block planning when CodeWiki is stale or missing |
+| `codewiki.require_fresh_before_milestone_close` | boolean | `true` | Require current CodeWiki before milestone close unless explicitly acknowledged |
+| `codewiki.require_verified_before_milestone_close` | boolean | `true` | Require `codewiki.verify` to pass before milestone close / CodeWiki freeze unless explicitly acknowledged |
+| `codewiki.evidence_policy` | string | `source_required` | Minimum evidence policy for durable wiki conclusions |
+| `codewiki.repomix_bin` | string | `repomix` | Repomix executable used by `/gsd-codewiki-pack`; overridden by `--repomix-bin` or `GSD_REPOMIX_BIN` |
+| `codewiki.deepwiki_export.command` | string or null | `null` | DeepWiki export command template used by `/gsd-codewiki-deepwiki-export`; supports `{repo}`, `{repo_id}`, `{commit}`, `{branch}`, `{output_dir}`, `{output_md}`, `{output_json}` |
+| `codewiki.deepwiki_export_command` | string or null | `null` | Legacy flat alias for `codewiki.deepwiki_export.command`; kept for existing configs |
+| `codewiki.projection.update_planning_codebase` | boolean | `false` | During planning, refresh `.planning/codebase/codewiki-summary.md` from selected CodeWiki |
+| `codewiki.projection.index_intel` | boolean | `false` | During planning, refresh `.planning/intel/codewiki.json` from selected CodeWiki when `intel.enabled=true` |
+| `codewiki.projection.mode` | string | `summary` | Projection detail level for `.planning/codebase/` |
+
+Manual commands are always available. Normal Bebop lifecycle hooks only act when `codewiki.enabled` and the matching opt-in policy flag are set. `/gsd-codewiki-init` scaffolds each repo namespace with the full `coder-llm-wiki` contract bundle; `/gsd-codewiki-bootstrap` can then fill inventory, index, module/flow, review, and snapshot content without additional configuration.
 
 ---
 

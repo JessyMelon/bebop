@@ -1433,6 +1433,48 @@ gsd-sdk query commit "docs(phase-{X}): complete phase execution" .planning/ROADM
 ```
 </step>
 
+<step name="codewiki_post_phase_handoff">
+**Optional CodeWiki maintenance after verified phase completion.**
+
+This step runs AFTER `update_roadmap` marks the phase complete. It is opt-in and must not change default execution behavior.
+
+Read configuration:
+
+```bash
+CODEWIKI_ENABLED=$(gsd-sdk query config-get codewiki.enabled 2>/dev/null || echo "false")
+CODEWIKI_UPDATE_ON_PHASE=$(gsd-sdk query config-get codewiki.update_on_phase_verified 2>/dev/null || echo "false")
+```
+
+**If `CODEWIKI_ENABLED` is not `true` or `CODEWIKI_UPDATE_ON_PHASE` is not `true`:** Skip this step.
+
+If enabled:
+
+```bash
+CODEWIKI_STATUS=$(gsd-sdk query codewiki.status 2>/dev/null || true)
+```
+
+Parse `selection.state`.
+
+**If state is `missing`:** Print:
+
+```text
+CodeWiki is not initialized. Run:
+  /gsd-codewiki-init
+```
+
+Then continue; missing CodeWiki must not undo a completed phase.
+
+**If state is `stale`, `dirty-current`, `set-stale`, or `set-partial`:**
+
+1. Run the semantic maintenance workflow before manifest promotion:
+   ```text
+   /gsd-codewiki-update --phase ${PHASE_NUMBER}
+   ```
+2. The CodeWiki update workflow will spawn `gsd-codewiki-maintainer` for source-backed wiki edits and then call `gsd-sdk query codewiki.update`.
+
+**If state is `current`, `set-current`, or `frozen`:** Report current state and continue.
+</step>
+
 <step name="auto_copy_learnings">
 **Auto-copy phase learnings to global store (when enabled).**
 

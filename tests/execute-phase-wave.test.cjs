@@ -97,11 +97,13 @@ describe('execute-phase docs: user-facing wave flag', () => {
   test('help workflow documents --wave behavior', () => {
     const content = fs.readFileSync(HELP_PATH, 'utf-8');
     assert.ok(
-      content.includes('Optional `--wave N` flag executes only Wave `N`'),
+      content.includes('Optional `--wave N` flag executes only Wave `N`')
+        || content.includes('可选 `--wave N` 只执行第 N 个 wave'),
       'help.md should describe wave-specific execution'
     );
     assert.ok(
-      content.includes('Usage: `/gsd-execute-phase 5 --wave 2`'),
+      content.includes('Usage: `/gsd-execute-phase 5 --wave 2`')
+        || content.includes('用法：`/gsd-execute-phase 5 --wave 2`'),
       'help.md should include wave-filter usage'
     );
   });

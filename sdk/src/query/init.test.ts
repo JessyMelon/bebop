@@ -458,6 +458,58 @@ describe('initMapCodebase', () => {
     expect(data.codebase_dir).toBe('.planning/codebase');
     expect(data.project_root).toBe(tmpDir);
   });
+
+  it('parses explicit --repos as scoped update targets', async () => {
+    await mkdir(join(tmpDir, 'ggw-slb_v2012_apsara'), { recursive: true });
+    await mkdir(join(tmpDir, 'service-slb-lvs'), { recursive: true });
+    await mkdir(join(tmpDir, 'slb-monitor'), { recursive: true });
+    await writeFile(join(tmpDir, '.planning', 'config.json'), JSON.stringify({
+      model_profile: 'balanced',
+      commit_docs: false,
+      sub_repos: ['ggw-slb_v2012_apsara', 'service-slb-lvs', 'slb-monitor'],
+    }));
+
+    const result = await initMapCodebase(['--repos', 'ggw-slb_v2012_apsara,service-slb-lvs,slb-monitor'], tmpDir);
+    const data = result.data as Record<string, unknown>;
+
+    expect(data.map_scope).toBe('repos');
+    expect(data.repo_scope_from).toBe('--repos');
+    expect(data.target_repos).toEqual(['ggw-slb_v2012_apsara', 'service-slb-lvs', 'slb-monitor']);
+    expect(data.target_repo_paths).toEqual(['ggw-slb_v2012_apsara', 'service-slb-lvs', 'slb-monitor']);
+    expect(data.missing_target_repos).toEqual([]);
+    expect(data.preserve_existing).toBe(true);
+    expect(data.scoped_update).toBe(true);
+  });
+
+  it('treats multiple repo-like bare args as scoped repo targets', async () => {
+    await mkdir(join(tmpDir, 'service-slb-lvs'), { recursive: true });
+    await mkdir(join(tmpDir, 'slb-monitor'), { recursive: true });
+    await writeFile(join(tmpDir, '.planning', 'config.json'), JSON.stringify({
+      model_profile: 'balanced',
+      commit_docs: false,
+      planning: { sub_repos: ['service-slb-lvs', 'slb-monitor'] },
+    }));
+
+    const result = await initMapCodebase(['service-slb-lvs', 'slb-monitor'], tmpDir);
+    const data = result.data as Record<string, unknown>;
+
+    expect(data.map_scope).toBe('repos');
+    expect(data.repo_scope_from).toBe('bare-args');
+    expect(data.target_repos).toEqual(['service-slb-lvs', 'slb-monitor']);
+    expect(data.target_repo_paths).toEqual(['service-slb-lvs', 'slb-monitor']);
+  });
+
+  it('keeps a single bare argument as area scope for compatibility', async () => {
+    await mkdir(join(tmpDir, 'auth'), { recursive: true });
+
+    const result = await initMapCodebase(['auth'], tmpDir);
+    const data = result.data as Record<string, unknown>;
+
+    expect(data.map_scope).toBe('area');
+    expect(data.area_filter).toBe('auth');
+    expect(data.target_repos).toEqual([]);
+    expect(data.preserve_existing).toBe(false);
+  });
 });
 
 describe('initNewWorkspace', () => {

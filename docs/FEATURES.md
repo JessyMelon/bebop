@@ -38,6 +38,7 @@
   - [Model Profiles](#26-model-profiles)
 - [Brownfield Features](#brownfield-features)
   - [Codebase Mapping](#27-codebase-mapping)
+  - [CodeWiki Lifecycle](#27a-codewiki-lifecycle)
 - [Utility Features](#utility-features)
   - [Debug System](#28-debug-system)
   - [Todo Management](#29-todo-management)
@@ -780,7 +781,7 @@
 
 ### 27. Codebase Mapping
 
-**Command:** `/gsd-map-codebase [area]`
+**Command:** `/gsd-map-codebase [area] [--repos repo-a,repo-b]`
 
 **Purpose:** Analyze an existing codebase before starting a new project, so GSD understands what exists.
 
@@ -790,6 +791,7 @@
 - REQ-MAP-03: System MUST detect: tech stack, architecture patterns, coding conventions, concerns
 - REQ-MAP-04: Subsequent `/gsd-new-project` MUST load codebase mapping and focus questions on what's being added
 - REQ-MAP-05: Optional `[area]` argument MUST scope mapping to a specific area
+- REQ-MAP-06: Optional `--repos` argument MUST update only the selected repos while preserving existing `.planning/codebase/` content for unrelated repos
 
 **Produces:**
 | Document | Content |
@@ -801,6 +803,51 @@
 | `STRUCTURE.md` | Directory layout and file organization |
 | `TESTING.md` | Test infrastructure, coverage, patterns |
 | `INTEGRATIONS.md` | External services, APIs, third-party dependencies |
+
+---
+
+### 27a. CodeWiki Lifecycle
+
+**Commands:** `/gsd-codewiki-init`, `/gsd-codewiki-select`, `/gsd-codewiki-status`, `/gsd-codewiki-verify`, `/gsd-codewiki-project`, `/gsd-codewiki-bootstrap`, `/gsd-codewiki-enrich`, `/gsd-codewiki-review`, `/gsd-codewiki-apply-review`, `/gsd-codewiki-index`, `/gsd-codewiki-pack`, `/gsd-codewiki-deepwiki-export`, `/gsd-codewiki-contract`, `/gsd-codewiki-flow`, `/gsd-codewiki-update`, `/gsd-codewiki-freeze`
+
+**Purpose:** Maintain version-aware, evidence-backed CodeWiki namespaces and multi-repo CodeWiki sets alongside the Bebop project lifecycle.
+
+**Requirements:**
+- REQ-CODEWIKI-01: System MUST bind each repo-level wiki namespace to `repo_id + ref_type + ref_name + commit_sha`.
+- REQ-CODEWIKI-02: System MUST support multi-repo CodeWiki sets through `wiki-set.yaml`.
+- REQ-CODEWIKI-03: System MUST report stale, missing, frozen, dirty, current, set-current, set-partial, and set-stale states.
+- REQ-CODEWIKI-04: System MUST update CodeWiki from real Git diffs, not free-form summaries.
+- REQ-CODEWIKI-05: System MUST treat DeepWiki and Repomix output as seed/context only, not final evidence.
+- REQ-CODEWIKI-06: System MUST promote a set tuple only after required member repo updates pass or are explicitly acknowledged.
+- REQ-CODEWIKI-07: System MUST discover multi-repo set members from existing Bebop workspace metadata when `--repos` is omitted.
+- REQ-CODEWIKI-08: System MUST keep normal Bebop lifecycle hooks opt-in through `codewiki.enabled` and policy flags.
+- REQ-CODEWIKI-09: System MUST project selected CodeWiki context into `.planning/codebase/` only as disposable planning context.
+- REQ-CODEWIKI-10: System MUST index selected CodeWiki facts into `.planning/intel/codewiki.json` only as derived query data when intel is enabled.
+- REQ-CODEWIKI-11: System SHOULD infer member roles conservatively during set initialization so multi-repo wiki tuples can distinguish frontend, backend, shared-library, service, worker, and docs repos.
+- REQ-CODEWIKI-12: System SHOULD provide set-level helpers for registering blocked cross-repo contract and flow documents that must be completed with source evidence before they are trusted.
+- REQ-CODEWIKI-13: System SHOULD discover DeepWiki and Repomix seed files during update and record them as seed-only metadata without treating them as evidence.
+- REQ-CODEWIKI-14: System SHOULD write a per-repo `maintenance-plan.json` during update so the maintainer has deterministic doc targets, task items, and evidence requirements.
+- REQ-CODEWIKI-15: System SHOULD verify `maintenance-plan.json` task completion against `progress.json`, `task-queue.json`, source evidence, and updated wiki files before treating maintenance as ready.
+- REQ-CODEWIKI-16: System SHOULD gate milestone close and CodeWiki freeze on successful maintenance verification unless explicitly acknowledged in configuration or command arguments.
+- REQ-CODEWIKI-17: System SHOULD enrich starter repo wikis from `.planning/codebase/` maps only when durable claims are re-validated against source/config evidence.
+- REQ-CODEWIKI-18: System SHOULD honor `response_language` for generated CodeWiki prose while preserving technical identifiers unchanged.
+- REQ-CODEWIKI-19: System SHOULD produce human-confirmation question lists for CodeWiki gaps that source/config evidence cannot resolve, without rewriting baseline wiki pages by default.
+- REQ-CODEWIKI-20: System SHOULD support a full `coder-llm-wiki` bootstrap workflow that runs inventory, index, module/flow analysis, review, status, and snapshot under Bebop freshness/verification controls.
+
+**Produces:**
+| Artifact | Description |
+|----------|-------------|
+| `code-wiki/wiki-index.yaml` | Registry of repo namespaces and sets |
+| `manifest.yaml` | Repo-level Git identity and wiki freshness |
+| `wiki-set.yaml` | Multi-repo compatible commit tuple |
+| `coder-llm-wiki/` | Durable repo-level evidence-backed wiki |
+| `cross-repo/contracts/` | Set-level compatibility contracts |
+| `cross-repo/flows/` | Set-level integration flows |
+| `snapshots/` | Repo and set-level checkpoints |
+| `maintenance-plan.json` | Per-repo mechanical handoff for CodeWiki maintenance |
+| `coder-llm-wiki/01-inventory/`, `02-index/`, `03-modules/`, `04-flows/`, `05-data/`, `06-ops/`, `07-risks/`, `08-evidence/`, `09-review/`, `10-snapshots/` | Full canonical `coder-llm-wiki` bootstrap and enrichment outputs |
+| `.planning/codebase/codewiki-summary.md` | Optional disposable projection for planner/executor consumption |
+| `.planning/intel/codewiki.json` | Optional derived index consumed by `/gsd-intel query` |
 
 ---
 
@@ -2012,6 +2059,7 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 - REQ-INTEL-04: `diff` mode MUST compare current intel state to the last snapshot
 - REQ-INTEL-05: `refresh` mode MUST spawn the intel-updater agent to rebuild all files
 - REQ-INTEL-06: Feature MUST be opt-in via `intel.enabled: true`
+- REQ-INTEL-07: Query mode SHOULD include `codewiki.json` when CodeWiki indexing has generated it
 
 **Intel files produced:**
 | File | Contents |
@@ -2021,6 +2069,7 @@ Test suite that scans all agent, workflow, and command files for embedded inject
 | `dependency-graph.json` | Inter-module dependency relationships |
 | `file-roles.json` | Role classification for each source file |
 | `arch-decisions.json` | Detected architecture decisions |
+| `codewiki.json` | Derived CodeWiki repo/set facts when generated by `/gsd-codewiki-index` |
 
 ---
 

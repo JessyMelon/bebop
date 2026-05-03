@@ -412,11 +412,40 @@
 
 分析现有代码库，或进行轻量扫描。
 
+`/gsd-map-codebase --repos repo-a,repo-b` 只补充或更新指定仓库的 codebase map，保留 `.planning/codebase/` 中其他仓库已有内容。也支持多个可识别 repo 裸参数，如 `/gsd-map-codebase repo-a repo-b`；推荐使用 `--repos` 以避免和 area 参数混淆。
+
 ---
 
 ### `/gsd-intel` / `/gsd-graphify`
 
 查询或刷新可检索的代码库情报与知识图谱。
+
+---
+
+### CodeWiki 命令
+
+CodeWiki 用于维护绑定到 Git commit 的长期代码知识库。DeepWiki 和 Repomix 输出只能作为 seed/context，最终结论必须回到源码、配置、测试或 Git diff 证据。
+
+| 命令 | 用途 |
+|------|------|
+| `/gsd-codewiki-init` | 初始化 repo CodeWiki namespace 或多仓库 CodeWiki set |
+| `/gsd-codewiki-select` | 只读选择当前 checkout 匹配的 namespace 或 set |
+| `/gsd-codewiki-status` | 展示 freshness、blocker、snapshot 和 set 状态 |
+| `/gsd-codewiki-verify` | 验证 freshness、baseline 完整度、`maintenance-plan.json`、`progress.json`、`task-queue.json`；`--maintenance-only` 用于 promotion 前任务校验 |
+| `/gsd-codewiki-project` | 将选中 CodeWiki 投影到 `.planning/codebase/codewiki-summary.md` |
+| `/gsd-codewiki-bootstrap` | 运行完整 `coder-llm-wiki` bootstrap |
+| `/gsd-codewiki-enrich` | 用 `.planning/codebase/` map 和源码证据丰富 canonical `coder-llm-wiki` baseline |
+| `/gsd-codewiki-review` | 生成需要人工确认的 CodeWiki 问题 |
+| `/gsd-codewiki-apply-review` | 将已确认 review 答案应用到 durable wiki pages |
+| `/gsd-codewiki-index` | 索引 CodeWiki facts 到 `.planning/intel/codewiki.json` |
+| `/gsd-codewiki-pack` | 为选中 repos 生成 Repomix seed bundles |
+| `/gsd-codewiki-deepwiki-export` | 运行或注册 DeepWiki exports |
+| `/gsd-codewiki-contract` | 创建或注册 set-level cross-repo contract |
+| `/gsd-codewiki-flow` | 创建或注册 set-level cross-repo flow |
+| `/gsd-codewiki-update` | 从源码 diff 更新 CodeWiki，按 prepare → maintain → verify → promote 执行 |
+| `/gsd-codewiki-freeze` | 为已发布版本冻结 namespace 或 set |
+
+`/gsd-codewiki-update --phase N` 会从 phase 相关 commit 解析 diff range；`--milestone VERSION` 优先使用 milestone tag range。没有匹配 range 的 repo 会被跳过，不会退回到更宽的 manifest-to-HEAD 范围。
 
 ---
 

@@ -23,7 +23,8 @@ const INTEL_FILES = {
   apis: 'api-map.json',
   deps: 'dependency-graph.json',
   arch: 'arch-decisions.json',
-  stack: 'stack.json'
+  stack: 'stack.json',
+  codewiki: 'codewiki.json'
 };
 
 // ─── Internal helpers ────────────────────────────────────────────────────────

@@ -32,6 +32,7 @@ const INTEL_FILES: Record<string, string> = {
   deps: 'deps.json',
   arch: 'arch.md',
   stack: 'stack.json',
+  codewiki: 'codewiki.json',
 };
 
 const STALE_MS = 24 * 60 * 60 * 1000; // 24 hours

@@ -79,6 +79,27 @@ const VALID_CONFIG_KEYS = new Set([
   'project_code', 'phase_naming',
   'manager.flags.discuss', 'manager.flags.plan', 'manager.flags.execute',
   'response_language',
+  'intel.enabled',
+  'codewiki.enabled',
+  'codewiki.root',
+  'codewiki.active_set',
+  'codewiki.member_repos',
+  'codewiki.update_on_phase_verified',
+  'codewiki.update_on_milestone_complete',
+  'codewiki.require_fresh_before_plan',
+  'codewiki.require_fresh_before_milestone_close',
+  'codewiki.require_verified_before_milestone_close',
+  'codewiki.evidence_policy',
+  'codewiki.repomix_bin',
+  'codewiki.deepwiki_export.command',
+  'codewiki.deepwiki_export_command',
+  'codewiki.projection.update_planning_codebase',
+  'codewiki.projection.index_intel',
+  'codewiki.projection.mode',
+  'graphify.enabled',
+  'graphify.build_timeout',
+  'claude_md_path',
+  'claude_md_assembly.mode',
 ]);
 
 // ─── CONFIG_KEY_SUGGESTIONS (D9 — match CJS config.cjs:57-67) ────────────
@@ -390,7 +411,7 @@ export const configNewProject: QueryHandler = async (args, projectDir, _workstre
   // Build default config
   const defaults: Record<string, unknown> = {
     model_profile: 'balanced',
-    commit_docs: false,
+    commit_docs: true,
     parallelization: 1,
     search_gitignored: false,
     brave_search: hasBraveSearch,

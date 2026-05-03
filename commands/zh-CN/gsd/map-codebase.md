@@ -1,13 +1,14 @@
 ---
 name: gsd:map-codebase
 description: 使用并行 mapper agents 分析代码库，生成 `.planning/codebase/` 文档
-argument-hint: "[optional: specific area to map, e.g., 'api' or 'auth']"
+argument-hint: "[area] [--repos repo-a,repo-b] [--refresh-scope]"
 allowed-tools:
   - Read
   - Bash
   - Glob
   - Grep
   - Write
+  - Edit
   - Task
 ---
 
@@ -24,7 +25,13 @@ allowed-tools:
 </execution_context>
 
 <context>
-Focus area：$ARGUMENTS（可选，如提供则告诉 agents 重点关注特定子系统）
+Arguments：$ARGUMENTS
+
+支持的范围：
+- 无参数：完整分析当前 workspace
+- `<area>`：按子系统/领域聚焦分析，如 `api`、`auth`
+- `--repos <repo-a,repo-b>`：只更新指定仓库对应的 `.planning/codebase/` 内容，并保留已有分析
+- 多个裸 repo 参数：如果所有参数都能匹配已配置或本地存在的 repo，则按 repo 范围处理
 
 **如果存在则加载项目状态：**
 检查 `.planning/STATE.md`，如果项目已初始化则加载上下文
@@ -49,17 +56,18 @@ Focus area：$ARGUMENTS（可选，如提供则告诉 agents 重点关注特定�
 </when_to_use>
 
 <process>
-1. 检查 `.planning/codebase/` 是否已存在（提供刷新或跳过选项）
-2. 创建 `.planning/codebase/` 目录结构
-3. 启动 4 个并行的 gsd-codebase-mapper agents：
+1. 解析参数并确定映射范围（full、area 或 repos）
+2. 检查 `.planning/codebase/` 是否已存在（除 `--repos` scoped update 外，提供刷新或跳过选项）
+3. 创建 `.planning/codebase/` 目录结构
+4. 启动 4 个并行的 gsd-codebase-mapper agents：
    - Agent 1：tech focus → 写入 STACK.md、INTEGRATIONS.md
    - Agent 2：arch focus → 写入 ARCHITECTURE.md、STRUCTURE.md
    - Agent 3：quality focus → 写入 CONVENTIONS.md、TESTING.md
    - Agent 4：concerns focus → 写入 CONCERNS.md
-4. 等待 agents 完成并收集确认信息（不是文档内容本身）
-5. 校验 7 份文档都存在，并统计行数
-6. 提交 codebase map
-7. 提供后续步骤（通常是：`/gsd-new-project` 或 `/gsd-plan-phase`）
+5. 等待 agents 完成并收集确认信息（不是文档内容本身）
+6. 校验 7 份文档都存在，并统计行数
+7. 提交 codebase map
+8. 提供后续步骤（通常是：`/gsd-new-project` 或 `/gsd-plan-phase`）
 </process>
 
 <success_criteria>

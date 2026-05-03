@@ -1067,10 +1067,13 @@ Analyze existing codebase with parallel mapper agents.
 | Argument | Required | Description |
 |----------|----------|-------------|
 | `area` | No | Scope mapping to a specific area |
+| `--repos <repo-a,repo-b>` | No | Update maps only for selected repos, preserving existing analysis |
+| `--refresh-scope` | No | In repo scope, replace stale sections for selected repos only |
 
 ```bash
 /gsd-map-codebase                   # Full codebase analysis
 /gsd-map-codebase auth              # Focus on auth area
+/gsd-map-codebase --repos api,worker # Update only selected repos
 ```
 
 ---
@@ -1104,13 +1107,299 @@ Query, inspect, or refresh queryable codebase intelligence files stored in `.pla
 | `diff` | Show changes since last snapshot |
 | `refresh` | Rebuild all intel files from codebase analysis |
 
-**Produces:** `.planning/intel/` JSON files (stack, api-map, dependency-graph, file-roles, arch-decisions)
+**Produces:** `.planning/intel/` JSON files (stack, api-map, dependency-graph, file-roles, arch-decisions, optional codewiki)
 
 ```bash
 /gsd-intel status                   # Check freshness of intel files
 /gsd-intel query authentication     # Search intel for a term
 /gsd-intel diff                     # What changed since last snapshot
 /gsd-intel refresh                  # Rebuild intel index
+```
+
+### `/gsd-codewiki-init`
+
+Initialize a version-aware CodeWiki namespace for the current repo/ref, or a multi-repo CodeWiki set.
+
+| Flag | Description |
+|------|-------------|
+| `--set <set-id>` | Create a multi-repo set manifest |
+| `--repos <paths>` | Comma-separated member repo paths |
+| `--repo-id <id>` | Override the current repo ID |
+
+When `--set` is present and `--repos` is omitted, Bebop discovers members from `codewiki.member_repos`, existing multi-repo config (`sub_repos` / `planning.sub_repos`), `WORKSPACE.md`, then child Git repos.
+
+Member roles are inferred conservatively during initialization from repo/package names, common dependency markers, and framework config files. Supported set roles are `frontend`, `backend`, `shared-library`, `service`, `worker`, and `docs`.
+
+**Produces:** `code-wiki/wiki-index.yaml`, repo `manifest.yaml` files, optional `wiki-set.yaml`, and full starter `coder-llm-wiki/` contract/templates.
+
+```bash
+/gsd-codewiki-init
+/gsd-codewiki-init --set checkout-platform__v1 --repos checkout-web,checkout-api
+```
+
+### `/gsd-codewiki-select`
+
+Select the matching CodeWiki namespace or multi-repo set for the current Git checkout. Read-only.
+
+| Flag | Description |
+|------|-------------|
+| `--set <set-id>` | Select and validate a set tuple |
+
+```bash
+/gsd-codewiki-select
+/gsd-codewiki-select --set checkout-platform__v1
+```
+
+### `/gsd-codewiki-status`
+
+Show CodeWiki freshness, blockers, snapshots, and set status. Read-only.
+
+```bash
+/gsd-codewiki-status
+/gsd-codewiki-status --set checkout-platform__v1
+```
+
+### `/gsd-codewiki-verify`
+
+Verify CodeWiki maintenance tasks, evidence, and blocked queues after update. Read-only.
+
+| Flag | Description |
+|------|-------------|
+| `--set <set-id>` | Verify a multi-repo set |
+| `--maintenance-only` | Pre-promotion task check; does not require manifests or set tuples to already be current |
+
+The verification reads `maintenance-plan.json`, `progress.json`, and `task-queue.json`. Completed tasks must have source evidence and updated files; blocked tasks must have concrete reasons. Default verification also checks freshness and baseline completeness for freeze and milestone gates, so init-only starter queues do not pass `--require-verified`; use `--maintenance-only` inside update before manifest promotion.
+
+```bash
+/gsd-codewiki-verify
+/gsd-codewiki-verify --set checkout-platform__v1
+/gsd-codewiki-verify --set checkout-platform__v1 --maintenance-only
+```
+
+### `/gsd-codewiki-project`
+
+Project selected CodeWiki context into `.planning/codebase/codewiki-summary.md` for planning. The projection is disposable; CodeWiki manifests and Git commits remain authoritative.
+
+| Flag | Description |
+|------|-------------|
+| `--set <set-id>` | Project a multi-repo set |
+
+```bash
+/gsd-codewiki-project
+/gsd-codewiki-project --set checkout-platform__v1
+```
+
+### `/gsd-codewiki-bootstrap`
+
+Run the full `coder-llm-wiki` workflow for a selected repo namespace: init repair, inventory, index, high-value module/flow analysis, review, status refresh, and snapshot.
+
+| Argument / Flag | Description |
+|-----------------|-------------|
+| `<repo-id>` | Target repo ID inside the selected CodeWiki set |
+| `--set <set-id>` | Select a multi-repo set |
+| `--max-auto-steps <n>` | Limit automatic bootstrap work (default `20`) |
+| `--allow-dirty` | Permit documenting a dirty target repo |
+
+This is the deep evidence-driven bootstrap path. It consumes the `coder-llm-wiki/00-meta/*` workflow contracts, updates `progress.json`, `task-queue.json`, `status-dashboard.md`, writes `maintenance-plan.json`, and runs `codewiki.verify` before refreshing the disposable planning projection.
+
+```bash
+/gsd-codewiki-bootstrap service-slb-controller --set slb-llm-rep__current
+/gsd-codewiki-bootstrap checkout-api --set checkout-platform__v1 --max-auto-steps 30
+```
+
+### `/gsd-codewiki-enrich`
+
+Enrich a repo-level CodeWiki baseline from `.planning/codebase/` maps and source/config evidence.
+
+Use this after `/gsd-codewiki-init` and `/gsd-map-codebase` when a repo wiki exists but still only has starter meta files. Unlike `/gsd-codewiki-update`, this command does not require a Git diff; it creates durable baseline pages from current source evidence.
+
+| Argument / Flag | Description |
+|-----------------|-------------|
+| `<repo-id>` | Target repo ID inside the selected CodeWiki set |
+| `--set <set-id>` | Select a multi-repo set |
+| `--pages <page,page>` | Limit enrichment to specific page slugs |
+| `--profile <name>` | Use a built-in enrichment profile. Supported: `api-maintenance` |
+| `--focus <text>` | Natural-language focus for this enrichment run |
+| `--sources <path,path>` | Prioritize specific source/config paths during evidence gathering |
+
+The command treats `.planning/codebase/*.md` as seed context only. Durable CodeWiki claims must cite real source/config files, and cross-repo claims must cite every participating repo. Enrichment writes into the canonical `coder-llm-wiki/01-inventory` through `09-review` taxonomy; it must not introduce parallel repo directories such as `01-architecture` or `03-config`.
+
+When `response_language` is configured, generated CodeWiki prose follows that language while code, commands, file paths, config keys, service names, and source identifiers remain unchanged.
+
+```bash
+/gsd-codewiki-enrich service-slb-controller --set slb-llm-rep__current
+/gsd-codewiki-enrich checkout-api --set checkout-platform__v1 --pages config,flows
+/gsd-codewiki-enrich slb-api --set slb-llm-rep__current --profile api-maintenance --focus "Action/Service/DAO/SQL mapping, API validation, config runtime overrides"
+```
+
+### `/gsd-codewiki-review`
+
+Produce the human-confirmation question list for a repo CodeWiki.
+
+Use this after `/gsd-codewiki-enrich` or before planning a risky change. The command reviews existing CodeWiki pages, open questions, task queues, planning maps, and source/config evidence, then reports only the gaps that need human business context, ownership decisions, operational policy, cross-repo confirmation, or missing evidence.
+
+By default this command is read-only. With `--write`, it may persist review notes under the repo wiki's `09-review/` area and blocked review tasks in `00-meta/task-queue.json`. With `--interactive`, it asks the questions one at a time in the current session and writes answers back unless `--dry-run` is present. It must not update business code, repo manifests, set manifests, or baseline wiki pages.
+
+| Argument / Flag | Description |
+|-----------------|-------------|
+| `<repo-id>` | Target repo ID inside the selected CodeWiki set |
+| `--set <set-id>` | Select a multi-repo set |
+| `--scope <scope>` | Focus the review: `all`, `business`, `contracts`, `operations`, or `config` |
+| `--write` | Persist the review report and blocked review tasks |
+| `--interactive` | Ask review questions in-session; implies write behavior unless `--dry-run` is present |
+| `--dry-run` | Suppress file writes, including interactive answer writes |
+| `--text` | Use plain-text numbered prompts instead of interactive TUI prompts |
+
+When `response_language` is configured, generated review questions and notes follow that language while code, commands, file paths, config keys, service names, and source identifiers remain unchanged.
+
+```bash
+/gsd-codewiki-review service-slb-controller --set slb-llm-rep__current
+/gsd-codewiki-review slb-api --set slb-llm-rep__current --scope contracts --write
+/gsd-codewiki-review service-slb-controller --set slb-llm-rep__current --scope operations --interactive
+```
+
+### `/gsd-codewiki-apply-review`
+
+Apply confirmed human review answers into durable repo-level CodeWiki pages.
+
+Use this after `/gsd-codewiki-review <repo-id> --interactive` or after manually filling `09-review/human-review.md`. It reads confirmed answers from `09-review/`, updates only affected formal wiki pages under `01-*` through `08-*`, marks applied content as human-confirmed, resolves applied questions in `open-questions.md`, and records apply-review work in `progress.json`.
+
+This command must not modify business code, repo manifests, set manifests, or unrelated wiki pages. It also must not run CodeWiki manifest promotion; use `/gsd-codewiki-update` for source-diff freshness and tuple promotion.
+
+| Argument / Flag | Description |
+|-----------------|-------------|
+| `<repo-id>` | Target repo ID inside the selected CodeWiki set |
+| `--set <set-id>` | Select a multi-repo set |
+| `--dry-run` | Report planned changes without writing files |
+
+When `response_language` is configured, generated CodeWiki prose follows that language while code, commands, file paths, config keys, service names, and source identifiers remain unchanged.
+
+```bash
+/gsd-codewiki-apply-review service-slb-controller --set slb-llm-rep__current
+/gsd-codewiki-apply-review service-slb-controller --set slb-llm-rep__current --dry-run
+```
+
+### `/gsd-codewiki-index`
+
+Index selected CodeWiki facts into `.planning/intel/codewiki.json` so `/gsd-intel query` can search them. Requires `intel.enabled=true`.
+
+| Flag | Description |
+|------|-------------|
+| `--set <set-id>` | Index a multi-repo set |
+
+```bash
+/gsd-codewiki-index
+/gsd-codewiki-index --set checkout-platform__v1
+```
+
+### `/gsd-codewiki-pack`
+
+Generate Repomix seed bundles for selected CodeWiki repos. Repomix output is seed-only context; final CodeWiki claims still require source, config, test, or Git diff evidence.
+
+| Flag | Description |
+|------|-------------|
+| `--set <set-id>` | Pack every member in a multi-repo set |
+| `--repo <repo-id>` / `--repos <repo-id,repo-id>` | Restrict selected repos |
+| `--style xml|markdown|json|plain` | Output format; default `xml` |
+| `--compress` | Ask Repomix to include compressed code structure |
+| `--force` | Regenerate existing bundles |
+| `--dry-run` | Show planned commands without writing |
+
+```bash
+/gsd-codewiki-pack --set slb-llm-rep__current
+/gsd-codewiki-pack --set slb-llm-rep__current --repo service-slb-controller --compress
+```
+
+### `/gsd-codewiki-deepwiki-export`
+
+Run or register DeepWiki exports for selected CodeWiki repos. DeepWiki output is seed-only structure and graph context; it is not final evidence.
+
+| Flag | Description |
+|------|-------------|
+| `--set <set-id>` | Export every member in a multi-repo set |
+| `--repo <repo-id>` / `--repos <repo-id,repo-id>` | Restrict selected repos |
+| `--command <template>` | DeepWiki runner command; supports `{repo}`, `{repo_id}`, `{commit}`, `{output_md}`, `{output_json}` |
+| `--register-existing` | Register already-created `deepwiki-export/deepwiki.md` |
+| `--force` | Rerun when an export already exists |
+| `--dry-run` | Show planned commands without writing |
+
+```bash
+/gsd-codewiki-deepwiki-export --set slb-llm-rep__current --register-existing
+/gsd-codewiki-deepwiki-export --set slb-llm-rep__current --command 'node "$HOME/.claude/get-shit-done/bin/deepwiki-open-export.cjs" --repo "{repo}" --output-md "{output_md}" --output-json "{output_json}"'
+```
+
+The bundled `deepwiki-open-export.cjs` helper is installed under `get-shit-done/bin/` for supported runtimes, including OpenCode. It exports an existing deepwiki-open cache when present, or calls a running deepwiki-open API at `DEEPWIKI_API_BASE_URL` / `http://localhost:8001` to generate the wiki first.
+
+### `/gsd-codewiki-contract`
+
+Create or register a set-level cross-repo contract document and link it from `wiki-set.yaml`.
+
+| Argument / Flag | Description |
+|-----------------|-------------|
+| `<name>` | Stable contract name |
+| `--set <set-id>` | Target multi-repo set |
+| `--producer <repo-id>` | Repo that owns the contract surface |
+| `--consumers <repo-id,repo-id>` | Repos that depend on the contract |
+
+The helper creates `cross-repo/contracts/<name>.md` as blocked scaffolding. It does not mark the contract current until producer and consumer source evidence is filled.
+
+```bash
+/gsd-codewiki-contract checkout-session-api --set checkout-platform__v1 --producer checkout-api --consumers checkout-web,payment-sdk
+```
+
+### `/gsd-codewiki-flow`
+
+Create or register a set-level cross-repo integration flow document and link it from `wiki-set.yaml`.
+
+| Argument / Flag | Description |
+|-----------------|-------------|
+| `<name>` | Stable flow name |
+| `--set <set-id>` | Target multi-repo set |
+| `--repos <repo-id,repo-id>` | Participating repos |
+
+The helper creates `cross-repo/flows/<name>.md` as blocked scaffolding. It does not mark the flow current until every participating repo has source-backed evidence.
+
+```bash
+/gsd-codewiki-flow create-checkout-session --set checkout-platform__v1 --repos checkout-web,checkout-api,payment-sdk
+```
+
+### `/gsd-codewiki-update`
+
+Update CodeWiki from source diffs after verified code changes.
+
+| Flag | Description |
+|------|-------------|
+| `--phase N` | Update from a completed phase |
+| `--milestone VERSION` | Update from a milestone range |
+| `--base SHA --head SHA` | Update from an explicit commit range |
+| `--set <set-id>` | Update a multi-repo set |
+
+Explicit `--base/--head` is used as-is for a repo update. `--phase` resolves the range from commits whose messages reference that phase scope, and `--milestone` resolves the range from the milestone tag when present or milestone-tagged commits otherwise. If a selected repo has no matching phase or milestone commits, Bebop skips that repo instead of falling back to a wider manifest-to-HEAD range. During set promotion, skipped members keep their existing tuple entries and do not need a new maintenance plan.
+
+During update, Bebop records discovered DeepWiki and Repomix files as seed-only context in snapshots. These files can guide maintenance work, but Git diff and source citations remain the only final evidence.
+
+The update also refreshes `coder-llm-wiki/00-meta/maintenance-plan.json` for each affected repo. This plan lists changed files, classifications, repo doc targets, set-level contract/flow candidates, task items, seed policy, and required evidence for `gsd-codewiki-maintainer`.
+
+```bash
+/gsd-codewiki-update --phase 3
+/gsd-codewiki-update --phase 3 --set checkout-platform__v1
+```
+
+### `/gsd-codewiki-freeze`
+
+Freeze a CodeWiki namespace or set for a shipped version.
+
+| Argument / Flag | Description |
+|-----------------|-------------|
+| `<version>` | Version label to freeze |
+| `--set <set-id>` | Freeze the full multi-repo set |
+| `--allow-unverified` | Explicitly acknowledge and freeze even when maintenance verification has not passed |
+
+Freeze runs CodeWiki maintenance verification before writing frozen manifests. Use `/gsd-codewiki-verify` to inspect unresolved tasks, invalid evidence, and blocked queues before freezing.
+
+```bash
+/gsd-codewiki-freeze v1.0
+/gsd-codewiki-freeze v1.0 --set checkout-platform__v1
 ```
 
 ### `/gsd-graphify`

@@ -96,6 +96,96 @@ Then re-run /gsd-plan-phase {N} --reviews
 ```
 Exit workflow.
 
+## 2.6. CodeWiki Freshness Gate
+
+This gate is opt-in and must not change default planning behavior.
+
+Read configuration:
+
+```bash
+CODEWIKI_ENABLED=$(gsd-sdk query config-get codewiki.enabled 2>/dev/null || echo "false")
+CODEWIKI_REQUIRE_FRESH=$(gsd-sdk query config-get codewiki.require_fresh_before_plan 2>/dev/null || echo "false")
+```
+
+**Skip if:** `CODEWIKI_ENABLED` is not `true` or `CODEWIKI_REQUIRE_FRESH` is not `true`.
+
+If enabled, run:
+
+```bash
+CODEWIKI_STATUS=$(gsd-sdk query codewiki.status 2>/dev/null || true)
+```
+
+Parse `selection.state`.
+
+**If state is `stale`, `set-stale`, or `missing`:** Stop planning and report:
+
+```text
+CodeWiki is not fresh enough for planning.
+
+State: <state>
+Next:
+  /gsd-codewiki-status
+  /gsd-codewiki-update   # when stale
+  /gsd-codewiki-init     # when missing
+```
+
+Do not silently continue when `codewiki.require_fresh_before_plan` is true. If the project intentionally wants planning to proceed with stale wiki context, set `codewiki.require_fresh_before_plan` to `false` and re-run.
+
+## 2.7. CodeWiki Projection
+
+This projection is opt-in and must not change default planning behavior.
+
+Read configuration:
+
+```bash
+CODEWIKI_ENABLED=$(gsd-sdk query config-get codewiki.enabled 2>/dev/null || echo "false")
+CODEWIKI_PROJECT_CODEBASE=$(gsd-sdk query config-get codewiki.projection.update_planning_codebase 2>/dev/null || echo "false")
+```
+
+**Skip if:** `CODEWIKI_ENABLED` is not `true` or `CODEWIKI_PROJECT_CODEBASE` is not `true`.
+
+If enabled, run:
+
+```bash
+CODEWIKI_PROJECTION=$(gsd-sdk query codewiki.project 2>/dev/null || true)
+```
+
+Parse `projected`, `output_path`, `state`, and `warnings`.
+
+**If `projected` is true:** include `.planning/codebase/codewiki-summary.md` in the planning context and prefer it over stale ad hoc codebase notes.
+
+**If `projected` is false:** continue only when `codewiki.require_fresh_before_plan` is false; otherwise stop and follow the reported `next_action`.
+
+The projection is disposable. Do not treat `.planning/codebase/codewiki-summary.md` as the source of truth for Git identity, set tuple, or release state.
+
+## 2.8. CodeWiki Intel Index
+
+This index is opt-in and must not change default planning behavior.
+
+Read configuration:
+
+```bash
+CODEWIKI_ENABLED=$(gsd-sdk query config-get codewiki.enabled 2>/dev/null || echo "false")
+CODEWIKI_INDEX_INTEL=$(gsd-sdk query config-get codewiki.projection.index_intel 2>/dev/null || echo "false")
+INTEL_ENABLED=$(gsd-sdk query config-get intel.enabled 2>/dev/null || echo "false")
+```
+
+**Skip if:** `CODEWIKI_ENABLED` is not `true`, `CODEWIKI_INDEX_INTEL` is not `true`, or `INTEL_ENABLED` is not `true`.
+
+If enabled, run:
+
+```bash
+CODEWIKI_INDEX=$(gsd-sdk query codewiki.index 2>/dev/null || true)
+```
+
+Parse `indexed`, `output_path`, `state`, and `warnings`.
+
+**If `indexed` is true:** `/gsd-intel query` can search `.planning/intel/codewiki.json` for repo IDs, set IDs, commit SHAs, wiki paths, and open questions.
+
+**If `indexed` is false:** continue planning unless `codewiki.require_fresh_before_plan` is true and the reported state is `missing`, `stale`, or `set-stale`.
+
+The intel index is derived JSON. Do not treat `.planning/intel/codewiki.json` as the source of truth for Git identity, set tuple, or release state.
+
 ## 3. Validate Phase
 
 ```bash

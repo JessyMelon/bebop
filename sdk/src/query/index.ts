@@ -75,6 +75,11 @@ import {
   intelExtractExports, intelPatchMeta, intelUpdate,
 } from './intel.js';
 import {
+  codewikiContract, codewikiDeepWikiExport, codewikiFlow, codewikiFreeze, codewikiIndex, codewikiInit,
+  codewikiPack,
+  codewikiProject, codewikiSelect, codewikiStatus, codewikiUpdate, codewikiVerify,
+} from './codewiki.js';
+import {
   learningsCopy, learningsQuery, learningsListHandler, learningsPrune, learningsDelete,
   extractMessages, scanSessions, profileSample, profileQuestionnaire,
 } from './profile.js';
@@ -152,6 +157,15 @@ export const QUERY_MUTATION_COMMANDS = new Set<string>([
   'learnings.prune', 'learnings prune',
   'learnings.delete', 'learnings delete',
   'intel.snapshot', 'intel.patch-meta', 'intel snapshot', 'intel patch-meta',
+  'codewiki.init', 'codewiki init',
+  'codewiki.update', 'codewiki update',
+  'codewiki.freeze', 'codewiki freeze',
+  'codewiki.project', 'codewiki project',
+  'codewiki.index', 'codewiki index',
+  'codewiki.pack', 'codewiki pack',
+  'codewiki.deepwiki-export', 'codewiki deepwiki-export',
+  'codewiki.contract', 'codewiki contract',
+  'codewiki.flow', 'codewiki flow',
   'write-profile', 'generate-claude-profile', 'generate-dev-preferences', 'generate-claude-md',
 ]);
 
@@ -536,6 +550,30 @@ export function createRegistry(
   registry.register('intel patch-meta', intelPatchMeta);
   registry.register('intel.update', intelUpdate);
   registry.register('intel update', intelUpdate);
+  registry.register('codewiki.init', codewikiInit);
+  registry.register('codewiki init', codewikiInit);
+  registry.register('codewiki.update', codewikiUpdate);
+  registry.register('codewiki update', codewikiUpdate);
+  registry.register('codewiki.freeze', codewikiFreeze);
+  registry.register('codewiki freeze', codewikiFreeze);
+  registry.register('codewiki.project', codewikiProject);
+  registry.register('codewiki project', codewikiProject);
+  registry.register('codewiki.index', codewikiIndex);
+  registry.register('codewiki index', codewikiIndex);
+  registry.register('codewiki.pack', codewikiPack);
+  registry.register('codewiki pack', codewikiPack);
+  registry.register('codewiki.deepwiki-export', codewikiDeepWikiExport);
+  registry.register('codewiki deepwiki-export', codewikiDeepWikiExport);
+  registry.register('codewiki.contract', codewikiContract);
+  registry.register('codewiki contract', codewikiContract);
+  registry.register('codewiki.flow', codewikiFlow);
+  registry.register('codewiki flow', codewikiFlow);
+  registry.register('codewiki.verify', codewikiVerify);
+  registry.register('codewiki verify', codewikiVerify);
+  registry.register('codewiki.select', codewikiSelect);
+  registry.register('codewiki select', codewikiSelect);
+  registry.register('codewiki.status', codewikiStatus);
+  registry.register('codewiki status', codewikiStatus);
   registry.register('generate-claude-profile', generateClaudeProfile);
   registry.register('generate-dev-preferences', generateDevPreferences);
   registry.register('write-profile', writeProfile);

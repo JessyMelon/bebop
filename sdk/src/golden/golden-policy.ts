@@ -51,6 +51,30 @@ const NO_CJS_SUBPROCESS_REASON: Record<string, string> = {
     'SDK-only structured plan parse (no CJS mirror). Covered in sdk/src/query/plan-task-structure.test.ts.',
   'requirements.extract-from-plans':
     'SDK-only requirements aggregation (no CJS mirror). Covered in sdk/src/query/requirements-extract-from-plans.test.ts.',
+  'codewiki.init':
+    'SDK-only CodeWiki lifecycle mutation (no `gsd-tools.cjs` mirror). Covered in sdk/src/query/codewiki.test.ts and compiled-JS smoke tests for repo/set init.',
+  'codewiki.update':
+    'SDK-only CodeWiki lifecycle mutation (no `gsd-tools.cjs` mirror). Covered in sdk/src/query/codewiki.test.ts and compiled-JS smoke tests for repo/set update.',
+  'codewiki.freeze':
+    'SDK-only CodeWiki lifecycle mutation (no `gsd-tools.cjs` mirror). Covered in sdk/src/query/codewiki.test.ts and compiled-JS smoke tests for repo/set freeze.',
+  'codewiki.project':
+    'SDK-only CodeWiki projection mutation (no `gsd-tools.cjs` mirror). Covered in sdk/src/query/codewiki.test.ts and compiled-JS smoke tests for repo/set projection into `.planning/codebase/`.',
+  'codewiki.index':
+    'SDK-only CodeWiki intel indexing mutation (no `gsd-tools.cjs` mirror). Covered in sdk/src/query/codewiki.test.ts and compiled-JS smoke tests for `.planning/intel/codewiki.json` indexing.',
+  'codewiki.pack':
+    'SDK-only CodeWiki Repomix seed generation mutation (no `gsd-tools.cjs` mirror). Covered in sdk/src/query/codewiki.test.ts and compiled-JS smoke tests for seed planning/registration.',
+  'codewiki.deepwiki-export':
+    'SDK-only CodeWiki DeepWiki export runner mutation (no `gsd-tools.cjs` mirror). Covered in sdk/src/query/codewiki.test.ts and compiled-JS smoke tests for export planning/registration.',
+  'codewiki.contract':
+    'SDK-only CodeWiki cross-repo contract helper (no `gsd-tools.cjs` mirror). Covered in sdk/src/query/codewiki.test.ts and compiled-JS smoke tests for set manifest cross_repo registration.',
+  'codewiki.flow':
+    'SDK-only CodeWiki cross-repo flow helper (no `gsd-tools.cjs` mirror). Covered in sdk/src/query/codewiki.test.ts and compiled-JS smoke tests for set manifest cross_repo registration.',
+  'codewiki.verify':
+    'SDK-only CodeWiki maintenance verification read (no `gsd-tools.cjs` mirror). Covered in sdk/src/query/codewiki.test.ts and compiled-JS smoke tests for maintenance-plan task verification.',
+  'codewiki.select':
+    'SDK-only CodeWiki lifecycle read (no `gsd-tools.cjs` mirror). Covered in sdk/src/query/codewiki.test.ts and compiled-JS smoke tests for repo/set selection states.',
+  'codewiki.status':
+    'SDK-only CodeWiki lifecycle read (no `gsd-tools.cjs` mirror). Covered in sdk/src/query/codewiki.test.ts and compiled-JS smoke tests for status snapshots, questions, and planning-codebase freshness hints.',
 };
 
 const READ_HANDLER_ONLY_REASON = (cmd: string) =>

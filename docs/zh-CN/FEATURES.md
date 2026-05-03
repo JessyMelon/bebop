@@ -267,11 +267,13 @@
 
 ### 27. 代码库映射
 
-**命令：** `/gsd-map-codebase [area]`
+**命令：** `/gsd-map-codebase [area] [--repos repo-a,repo-b]`
 
 **目的：** 在开始新项目前分析已有代码库，让 GSD 先理解现状。
 
 **产出：** `STACK.md`、`ARCHITECTURE.md`、`CONVENTIONS.md`、`CONCERNS.md`、`STRUCTURE.md`、`TESTING.md`、`INTEGRATIONS.md`
+
+**范围更新：** 使用 `--repos` 时，只更新指定仓库相关内容，并保留 `.planning/codebase/` 中其他仓库的已有分析。
 
 ---
 

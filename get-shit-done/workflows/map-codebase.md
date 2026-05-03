@@ -31,23 +31,57 @@ Documents are reference material for Claude when planning/executing. Always incl
 Load codebase mapping context:
 
 ```bash
-INIT=$(gsd-sdk query init.map-codebase)
+INIT=$(gsd-sdk query init.map-codebase $ARGUMENTS)
 if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
 AGENT_SKILLS_MAPPER=$(gsd-sdk query agent-skills gsd-codebase-mapper 2>/dev/null)
 ```
 
-Extract from init JSON: `mapper_model`, `commit_docs`, `codebase_dir`, `existing_maps`, `has_maps`, `codebase_dir_exists`, `subagent_timeout`, `date`.
+Extract from init JSON: `mapper_model`, `commit_docs`, `codebase_dir`, `existing_maps`, `has_maps`, `codebase_dir_exists`, `subagent_timeout`, `date`, `response_language`, `map_scope`, `area_filter`, `target_repos`, `target_repo_paths`, `missing_target_repos`, `preserve_existing`, `scoped_update`, `refresh_scope`.
+
+**If `response_language` is set:** all generated `.planning/codebase/*.md` documents and mapper confirmations MUST be written in that language. Keep code, commands, file paths, config keys, package names, protocol names, and quoted source identifiers unchanged.
+
+## Argument semantics
+
+- `map_scope=full`: analyze the whole workspace.
+- `map_scope=area`: analyze the whole workspace with focus on `area_filter`.
+- `map_scope=repos`: update codebase maps only for `target_repos`.
+
+When `map_scope=repos`:
+
+- Treat this as scoped update mode by default.
+- Preserve existing `.planning/codebase/*.md` content.
+- Do not delete `.planning/codebase/`.
+- Do not rewrite unrelated repo sections.
+- Analyze only `target_repos` as primary source.
+- Read other repos only when needed to verify cross-repo dependencies or integrations.
+- If `missing_target_repos` is non-empty, stop and report the missing names before spawning agents.
+- If `refresh_scope=true`, replace only stale sections for the target repos; never refresh the whole codebase map.
 </step>
 
 <step name="check_existing">
 Check if .planning/codebase/ already exists using `has_maps` from init context.
+
+If `map_scope=repos` and `missing_target_repos` is non-empty, stop with:
+
+```text
+Cannot map selected repos because these targets were not found:
+- <repo>
+
+Check .planning/config.json sub_repos/codewiki.member_repos or local child repo directories.
+```
+
+If `map_scope=repos`:
+
+- If `.planning/codebase/` exists, do not ask Refresh/Update/Skip; continue with scoped update and preserve existing content.
+- If `.planning/codebase/` does not exist, create it and generate maps scoped to the selected repos.
+- Record this scope prominently in every mapper prompt.
 
 If `codebase_dir_exists` is true:
 ```bash
 ls -la .planning/codebase/
 ```
 
-**If exists:**
+**If exists and `map_scope` is not `repos`:**
 
 ```
 .planning/codebase/ already exists with these documents:
@@ -115,14 +149,23 @@ Task(
   description="Map codebase tech stack",
   prompt="Focus: tech
 Today's date: {date}
+Response language: {response_language}
+Map scope: {map_scope}
+Area filter: {area_filter}
+Target repos: {target_repos}
+Target repo paths: {target_repo_paths}
 
 Analyze this codebase for technology stack and external integrations.
+
+If Map scope is repos, only update analysis for Target repos. Preserve existing .planning/codebase content for every other repo. Read non-target repos only to verify cross-repo relationships.
 
 Write these documents to .planning/codebase/:
 - STACK.md - Languages, runtime, frameworks, dependencies, configuration
 - INTEGRATIONS.md - External APIs, databases, auth providers, webhooks
 
 IMPORTANT: Use {date} for all [YYYY-MM-DD] date placeholders in documents.
+IMPORTANT: If response_language is set, write the generated Markdown documents in that language. Keep code, file paths, config keys, commands, and dependency names unchanged.
+IMPORTANT: In repo-scoped mode, read existing target documents first and update only sections for Target repos. Do not rewrite unrelated content.
 
 Explore thoroughly. Write documents directly using templates. Return confirmation only.
 ${AGENT_SKILLS_MAPPER}"
@@ -139,14 +182,23 @@ Task(
   description="Map codebase architecture",
   prompt="Focus: arch
 Today's date: {date}
+Response language: {response_language}
+Map scope: {map_scope}
+Area filter: {area_filter}
+Target repos: {target_repos}
+Target repo paths: {target_repo_paths}
 
 Analyze this codebase architecture and directory structure.
+
+If Map scope is repos, only update analysis for Target repos. Preserve existing .planning/codebase content for every other repo. Read non-target repos only to verify cross-repo relationships.
 
 Write these documents to .planning/codebase/:
 - ARCHITECTURE.md - Pattern, layers, data flow, abstractions, entry points
 - STRUCTURE.md - Directory layout, key locations, naming conventions
 
 IMPORTANT: Use {date} for all [YYYY-MM-DD] date placeholders in documents.
+IMPORTANT: If response_language is set, write the generated Markdown documents in that language. Keep code, file paths, config keys, commands, and dependency names unchanged.
+IMPORTANT: In repo-scoped mode, read existing target documents first and update only sections for Target repos. Do not rewrite unrelated content.
 
 Explore thoroughly. Write documents directly using templates. Return confirmation only.
 ${AGENT_SKILLS_MAPPER}"
@@ -163,14 +215,23 @@ Task(
   description="Map codebase conventions",
   prompt="Focus: quality
 Today's date: {date}
+Response language: {response_language}
+Map scope: {map_scope}
+Area filter: {area_filter}
+Target repos: {target_repos}
+Target repo paths: {target_repo_paths}
 
 Analyze this codebase for coding conventions and testing patterns.
+
+If Map scope is repos, only update analysis for Target repos. Preserve existing .planning/codebase content for every other repo. Read non-target repos only to verify cross-repo relationships.
 
 Write these documents to .planning/codebase/:
 - CONVENTIONS.md - Code style, naming, patterns, error handling
 - TESTING.md - Framework, structure, mocking, coverage
 
 IMPORTANT: Use {date} for all [YYYY-MM-DD] date placeholders in documents.
+IMPORTANT: If response_language is set, write the generated Markdown documents in that language. Keep code, file paths, config keys, commands, and dependency names unchanged.
+IMPORTANT: In repo-scoped mode, read existing target documents first and update only sections for Target repos. Do not rewrite unrelated content.
 
 Explore thoroughly. Write documents directly using templates. Return confirmation only.
 ${AGENT_SKILLS_MAPPER}"
@@ -187,13 +248,22 @@ Task(
   description="Map codebase concerns",
   prompt="Focus: concerns
 Today's date: {date}
+Response language: {response_language}
+Map scope: {map_scope}
+Area filter: {area_filter}
+Target repos: {target_repos}
+Target repo paths: {target_repo_paths}
 
 Analyze this codebase for technical debt, known issues, and areas of concern.
+
+If Map scope is repos, only update analysis for Target repos. Preserve existing .planning/codebase content for every other repo. Read non-target repos only to verify cross-repo relationships.
 
 Write this document to .planning/codebase/:
 - CONCERNS.md - Tech debt, bugs, security, performance, fragile areas
 
 IMPORTANT: Use {date} for all [YYYY-MM-DD] date placeholders in documents.
+IMPORTANT: If response_language is set, write the generated Markdown document in that language. Keep code, file paths, config keys, commands, and dependency names unchanged.
+IMPORTANT: In repo-scoped mode, read existing target documents first and update only sections for Target repos. Do not rewrite unrelated content.
 
 Explore thoroughly. Write document directly using template. Return confirmation only.
 ${AGENT_SKILLS_MAPPER}"
@@ -246,7 +316,17 @@ When the `Task` tool is unavailable, perform codebase mapping sequentially in th
 
 **IMPORTANT:** Use `{date}` from init context for all `[YYYY-MM-DD]` date placeholders in documents. NEVER guess the date.
 
+**IMPORTANT:** If `response_language` is set in init context, write all generated Markdown documents and summaries in that language. Keep code, commands, file paths, config keys, package names, protocol names, and quoted source identifiers unchanged.
+
 Perform all 4 mapping passes sequentially:
+
+Before each pass, apply the map scope from init context:
+
+- If `map_scope=repos`, analyze only `target_repos` / `target_repo_paths` as primary source.
+- Preserve existing `.planning/codebase/*.md`.
+- Read existing target documents before editing.
+- Update only sections related to the target repos.
+- Read non-target repos only to verify cross-repo dependencies.
 
 **Pass 1: Tech Focus**
 - Explore package.json/Cargo.toml/go.mod/requirements.txt, config files, dependency trees
@@ -283,6 +363,7 @@ wc -l .planning/codebase/*.md
 **Verification checklist:**
 - All 7 documents exist
 - No empty documents (each should have >20 lines)
+- If `map_scope=repos`, output mentions only target repos as primary additions/updates and does not remove unrelated repo content.
 
 If any documents missing or empty, note which agents may have failed.
 
@@ -328,7 +409,7 @@ Continue to commit_codebase_map.
 Commit the codebase map:
 
 ```bash
-gsd-sdk query commit "docs: map existing codebase" .planning/codebase/*.md
+gsd-sdk query commit "docs: map selected codebase repos" .planning/codebase/*.md
 ```
 
 Continue to offer_next.

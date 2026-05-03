@@ -164,6 +164,73 @@ Wait for confirmation.
 
 </step>
 
+<step name="codewiki_milestone_freshness_gate">
+**Optional CodeWiki freshness gate before milestone close.**
+
+This gate is active only when CodeWiki is enabled. It prevents shipping a milestone with a stale CodeWiki set unless the project configuration explicitly allows it.
+
+Read configuration:
+
+```bash
+CODEWIKI_ENABLED=$(gsd-sdk query config-get codewiki.enabled 2>/dev/null || echo "false")
+CODEWIKI_REQUIRE_FRESH=$(gsd-sdk query config-get codewiki.require_fresh_before_milestone_close 2>/dev/null || echo "true")
+CODEWIKI_REQUIRE_VERIFIED=$(gsd-sdk query config-get codewiki.require_verified_before_milestone_close 2>/dev/null || echo "true")
+```
+
+**If `CODEWIKI_ENABLED` is not `true`:** Skip this step.
+
+If enabled, run:
+
+```bash
+CODEWIKI_STATUS=$(gsd-sdk query codewiki.status 2>/dev/null || true)
+```
+
+Parse `selection.state`.
+
+**If state is `missing`:** Stop and recommend:
+
+```text
+CodeWiki is enabled but not initialized.
+
+Run:
+  /gsd-codewiki-init
+```
+
+**If state is `stale` or `set-stale` and `CODEWIKI_REQUIRE_FRESH` is `true`:** Stop and recommend:
+
+```text
+CodeWiki is stale and must be updated before milestone close.
+
+Run:
+  /gsd-codewiki-status
+  /gsd-codewiki-update
+```
+
+**If state is `stale` or `set-stale` and `CODEWIKI_REQUIRE_FRESH` is not `true`:** Present the stale state as a known release risk and require explicit user acknowledgement before continuing.
+
+**If state is `current`, `set-current`, `dirty-current`, `set-partial`, or `frozen`:** Continue, but surface `dirty-current` and `set-partial` as warnings in the milestone close summary.
+
+**If `CODEWIKI_REQUIRE_VERIFIED` is `true`:** Run the maintenance verification gate:
+
+```bash
+CODEWIKI_VERIFY=$(gsd-sdk query codewiki.verify 2>/dev/null || true)
+```
+
+Parse `verified`, `totals`, and per-task `issues`.
+
+If `verified` is not true, stop and recommend:
+
+```text
+CodeWiki maintenance tasks are not verified.
+
+Run:
+  /gsd-codewiki-verify
+  /gsd-codewiki-update
+```
+
+Do not close the milestone until unresolved tasks, invalid evidence, or blocked queue items are fixed or explicitly acknowledged by setting `codewiki.require_verified_before_milestone_close=false` for this project.
+</step>
+
 <step name="gather_stats">
 
 Calculate milestone statistics:
@@ -748,6 +815,40 @@ If yes:
 git push origin v[X.Y]
 ```
 
+</step>
+
+<step name="codewiki_freeze">
+**Optional CodeWiki freeze after milestone tag creation.**
+
+Read configuration:
+
+```bash
+CODEWIKI_ENABLED=$(gsd-sdk query config-get codewiki.enabled 2>/dev/null || echo "false")
+CODEWIKI_FREEZE_ON_MILESTONE=$(gsd-sdk query config-get codewiki.update_on_milestone_complete 2>/dev/null || echo "true")
+CODEWIKI_REQUIRE_VERIFIED=$(gsd-sdk query config-get codewiki.require_verified_before_milestone_close 2>/dev/null || echo "true")
+```
+
+**If `CODEWIKI_ENABLED` is not `true` or `CODEWIKI_FREEZE_ON_MILESTONE` is not `true`:** Skip this step.
+
+If enabled, freeze the selected CodeWiki namespace or active set for the shipped version:
+
+```bash
+if [ "$CODEWIKI_REQUIRE_VERIFIED" = "true" ]; then
+  CODEWIKI_FREEZE=$(gsd-sdk query codewiki.freeze "v[X.Y]" --require-verified 2>/dev/null || true)
+else
+  CODEWIKI_FREEZE=$(gsd-sdk query codewiki.freeze "v[X.Y]" 2>/dev/null || true)
+fi
+```
+
+Parse `frozen`, `warnings`, `members`, and `set_snapshot`.
+
+**If `frozen` is true:** Include frozen repo manifests and set snapshot path in the milestone close report.
+
+**If freeze fails because CodeWiki is stale:** Stop and run `/gsd-codewiki-update`, then re-run `/gsd-complete-milestone`. Do not ship a milestone with stale CodeWiki when `codewiki.require_fresh_before_milestone_close` is true.
+
+**If freeze fails because CodeWiki maintenance verification failed:** Stop and run `/gsd-codewiki-verify`, resolve task records or evidence, then re-run `/gsd-complete-milestone`. Only bypass this by explicitly setting `codewiki.require_verified_before_milestone_close=false` for the project and recording the release risk in milestone notes.
+
+**If freeze reports missing Git tags:** Continue only if the release intentionally uses a different tag strategy; record the warning in the milestone notes.
 </step>
 
 <step name="git_commit_milestone">

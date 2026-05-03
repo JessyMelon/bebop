@@ -1,6 +1,6 @@
 # GSD Agent Reference
 
-> Full role cards for 21 primary agents plus concise stubs for 10 advanced/specialized agents (31 shipped agents total). The `agents/` directory and [`docs/INVENTORY.md`](INVENTORY.md) are the authoritative roster; see [Architecture](ARCHITECTURE.md) for context.
+> Full role cards for 21 primary agents plus concise stubs for 13 advanced/specialized agents (34 shipped agents total). The `agents/` directory and [`docs/INVENTORY.md`](INVENTORY.md) are the authoritative roster; see [Architecture](ARCHITECTURE.md) for context.
 
 ---
 
@@ -10,7 +10,7 @@ GSD uses a multi-agent architecture where thin orchestrators (workflow files) sp
 
 ### Agent Categories
 
-> The table below covers the **21 primary agents** detailed in this section. Ten additional shipped agents (pattern-mapper, debug-session-manager, code-reviewer, code-fixer, ai-researcher, domain-researcher, eval-planner, eval-auditor, framework-selector, intel-updater) have concise stubs in the [Advanced and Specialized Agents](#advanced-and-specialized-agents) section below. For the authoritative 31-agent roster, see [`docs/INVENTORY.md`](INVENTORY.md) and the `agents/` directory.
+> The table below covers the **21 primary agents** detailed in this section. Thirteen additional shipped agents (pattern-mapper, debug-session-manager, code-reviewer, code-fixer, ai-researcher, domain-researcher, eval-planner, eval-auditor, framework-selector, intel-updater, codewiki-maintainer, doc-classifier, doc-synthesizer) have concise stubs in the [Advanced and Specialized Agents](#advanced-and-specialized-agents) section below. For the authoritative 34-agent roster, see [`docs/INVENTORY.md`](INVENTORY.md) and the `agents/` directory.
 
 | Category | Count | Agents |
 |----------|-------|--------|
@@ -472,7 +472,7 @@ Communication style, decision patterns, debugging approach, UX preferences, vend
 
 ## Advanced and Specialized Agents
 
-Ten additional agents ship under `agents/gsd-*.md` and are used by specialty workflows (`/gsd-ai-integration-phase`, `/gsd-eval-review`, `/gsd-code-review`, `/gsd-code-review-fix`, `/gsd-debug`, `/gsd-intel`, `/gsd-select-framework`) and by the planner pipeline. Each carries full frontmatter in its agent file; the stubs below are concise by design. The authoritative roster (with spawner and primary-doc status per agent) lives in [`docs/INVENTORY.md`](INVENTORY.md).
+Thirteen additional agents ship under `agents/gsd-*.md` and are used by specialty workflows (`/gsd-ai-integration-phase`, `/gsd-eval-review`, `/gsd-code-review`, `/gsd-code-review-fix`, `/gsd-debug`, `/gsd-intel`, `/gsd-codewiki-*`, `/gsd-select-framework`) and by the planner pipeline. Each carries full frontmatter in its agent file; the stubs below are concise by design. The authoritative roster (with spawner and primary-doc status per agent) lives in [`docs/INVENTORY.md`](INVENTORY.md).
 
 ### gsd-pattern-mapper
 
@@ -671,6 +671,25 @@ Ten additional agents ship under `agents/gsd-*.md` and are used by specialty wor
 **Key behaviors:**
 - Writes current state only — no temporal language, every claim references an actual file path
 - Uses Glob / Read / Grep for cross-platform correctness; Bash is reserved for `gsd-sdk query intel` CLI calls
+
+---
+
+### gsd-codewiki-maintainer
+
+**Role:** Maintains version-aware CodeWiki namespaces and multi-repo CodeWiki sets from source diffs, full `coder-llm-wiki` bootstrap batches, source-backed enrichment tasks, and human-review/application flows.
+
+| Property | Value |
+|----------|-------|
+| **Spawned by** | `/gsd-codewiki-update`, `/gsd-codewiki-bootstrap`, `/gsd-codewiki-enrich`, `/gsd-codewiki-review`, `/gsd-codewiki-apply-review` |
+| **Parallelism** | Single instance per target repo namespace |
+| **Tools** | Read, Bash, Grep, Glob, Write, Edit |
+| **Model (balanced)** | Sonnet |
+| **Color** | Blue |
+| **Produces** | Durable `coder-llm-wiki/` updates, evidence refs, review notes, progress/task state, snapshots |
+
+**Key behaviors:**
+- Treats DeepWiki and Repomix as seed context only; durable claims require source/config/test/script or Git diff evidence
+- In bootstrap mode, follows the canonical `coder-llm-wiki` workflow from inventory through snapshot instead of writing a free-form summary
 
 ---
 

@@ -385,6 +385,7 @@ describe('intelValidate', () => {
     writeIntelJson(planningDir, 'dependency-graph.json', { entries: {} });
     writeIntelJson(planningDir, 'stack.json', { entries: {} });
     writeIntelJson(planningDir, 'arch-decisions.json', { entries: {} });
+    writeIntelJson(planningDir, 'codewiki.json', { entries: {} });
 
     const result = intelValidate(planningDir);
     assert.strictEqual(result.valid, true);
@@ -399,6 +400,7 @@ describe('intelValidate', () => {
     writeIntelJson(planningDir, 'dependency-graph.json', { entries: {} });
     writeIntelJson(planningDir, 'stack.json', { entries: {} });
     writeIntelJson(planningDir, 'arch-decisions.json', { entries: {} });
+    writeIntelJson(planningDir, 'codewiki.json', { entries: {} });
 
     const result = intelValidate(planningDir);
     assert.strictEqual(result.valid, false);
@@ -424,6 +426,10 @@ describe('intelValidate', () => {
       entries: {},
     });
     writeIntelJson(planningDir, 'arch-decisions.json', {
+      _meta: { updated_at: now },
+      entries: {},
+    });
+    writeIntelJson(planningDir, 'codewiki.json', {
       _meta: { updated_at: now },
       entries: {},
     });
