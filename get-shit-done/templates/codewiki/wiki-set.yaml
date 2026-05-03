@@ -1,0 +1,35 @@
+# CodeWiki set manifest template.
+# This file binds multiple repo-level CodeWiki namespaces into one compatible tuple.
+
+set_id: "<set-id>"
+name: "<human-readable-name>"
+scope: "workspace" # workspace | feature | milestone | release
+description: "<what this repo set represents>"
+
+created_at: "<iso-8601>"
+updated_at: "<iso-8601>"
+status: "active" # active | frozen | archived
+
+members:
+  - repo_id: "<repo-id>"
+    role: "<frontend|backend|shared-library|service|worker|docs>"
+    required: true
+    source_repo: "<absolute-or-workspace-relative-repo-path>"
+    ref_type: "branch"
+    ref_name: "<ref-name>"
+    commit_sha: "<full-commit-sha>"
+    manifest: "../../<repo-id>/<ref-namespace>/manifest.yaml"
+    wiki_path: "../../<repo-id>/<ref-namespace>/coder-llm-wiki"
+
+compatibility:
+  tuple_id: "<set-id>__<short-sha>_<short-sha>"
+  stale_if_any_member_differs: true
+  allow_optional_missing: false
+
+cross_repo:
+  contracts: []
+  flows: []
+
+paths:
+  latest_snapshot: "snapshots/<snapshot-file>.md"
+

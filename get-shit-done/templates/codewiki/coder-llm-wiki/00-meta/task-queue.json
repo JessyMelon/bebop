@@ -1,0 +1,49 @@
+[
+  {
+    "id": "inventory-core",
+    "type": "inventory",
+    "scope": ["repository root"],
+    "status": "pending",
+    "owner": "unassigned",
+    "priority": "high",
+    "attempts": 0,
+    "depends_on": [],
+    "inputs": [
+      "README.md",
+      "top-level config files",
+      "repository root structure"
+    ],
+    "outputs": [
+      "coder-llm-wiki/01-inventory/repo-map.md",
+      "coder-llm-wiki/01-inventory/tech-stack.md",
+      "coder-llm-wiki/01-inventory/entrypoints.md",
+      "coder-llm-wiki/01-inventory/module-candidates.json"
+    ],
+    "review_result": "not_reviewed",
+    "notes": [],
+    "last_updated_at": ""
+  },
+  {
+    "id": "index-core",
+    "type": "index",
+    "scope": ["entrypoints", "core symbols", "tests"],
+    "status": "pending",
+    "owner": "unassigned",
+    "priority": "high",
+    "attempts": 0,
+    "depends_on": ["inventory-core"],
+    "inputs": [
+      "coder-llm-wiki/01-inventory/entrypoints.md",
+      "real entry files",
+      "core test directories"
+    ],
+    "outputs": [
+      "coder-llm-wiki/02-index/routes.md",
+      "coder-llm-wiki/02-index/symbols.md",
+      "coder-llm-wiki/02-index/test-map.md"
+    ],
+    "review_result": "not_reviewed",
+    "notes": [],
+    "last_updated_at": ""
+  }
+]

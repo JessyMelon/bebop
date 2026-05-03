@@ -1,0 +1,8 @@
+[
+  {
+    "name": "example-module",
+    "paths": ["src/example"],
+    "reason": "replace with a real module candidate after inventory",
+    "priority": "medium"
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "updated_at": null,
+  "default_policy": {
+    "scope_root": "source_repo_root",
+    "allow_excluded_evidence": false
+  },
+  "exclude_paths": [],
+  "exclusions": [],
+  "example_exclusion": {
+    "pattern": "legacy/**",
+    "reason": "已废弃，不参与当前运行链路",
+    "status": "confirmed",
+    "owner": null,
+    "last_confirmed_at": null
+  },
+  "notes": [
+    "`exclude_paths` 和 `exclusions[].pattern` 均为目标源码仓库根目录相对 glob。",
+    "排除路径不参与 inventory、index、module、flow 分析，也不能进入 completed task 的 `evidence_paths`。",
+    "如果 live code 仍引用排除路径，请记录到 `09-review/`，不要静默作为事实写入。"
+  ]
+}

@@ -1,0 +1,33 @@
+# CodeWiki repo manifest template.
+# This file binds one repo-level CodeWiki namespace to one Git state.
+
+repo_id: "<repo-id>"
+source_repo: "<absolute-or-workspace-relative-repo-path>"
+
+ref_type: "branch" # branch | tag | commit | pr
+ref_name: "<ref-name>"
+commit_sha: "<full-commit-sha>"
+base_ref: ""
+base_commit_sha: ""
+
+wiki_version_id: "<repo-id>__<ref-name>__<short-sha>"
+created_at: "<iso-8601>"
+updated_at: "<iso-8601>"
+status: "active" # active | frozen | archived
+
+paths:
+  wiki_root: "coder-llm-wiki/"
+  deepwiki_export: "deepwiki-export/deepwiki.md"
+  latest_snapshot: "coder-llm-wiki/10-snapshots/<snapshot-file>.md"
+
+source_policy:
+  final_truth: "git_commit"
+  seed_sources_allowed: true
+  seed_sources_are_evidence: false
+  evidence_required: true
+
+freshness:
+  valid_for_commit: "<full-commit-sha>"
+  stale_if_commit_differs: true
+  dirty_at_last_update: false
+
